@@ -1,7 +1,7 @@
 import anthropic
 
 # (Keep your API Key and client initialization the same)
-CLAUDE_API_KEY = "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"
+CLAUDE_API_KEY = ""
 client = anthropic.Anthropic(api_key=CLAUDE_API_KEY)
 
 
