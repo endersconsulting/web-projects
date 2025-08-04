@@ -1,0 +1,259 @@
+/* styles/Home.module.css */
+/* This file contains component-specific styles using CSS Modules. */
+
+/* --- Main Layout & Background --- */
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    background-color: #ffffff;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+}
+
+/* --- Header & Navigation --- */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 3rem;
+    background-color: var(--primary-color);
+    color: var(--text-color);
+    border-bottom: 3px solid var(--accent-color);
+}
+
+.logo h1 {
+    font-weight: 700;
+    font-size: 1.8rem;
+    cursor: default;
+    letter-spacing: -1px;
+}
+
+.navigation a {
+    color: var(--text-color);
+    text-decoration: none;
+    margin-left: 2rem;
+    font-weight: 500;
+    font-size: 1rem;
+    position: relative;
+    transition: color 0.3s ease;
+}
+
+.navigation a::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 2px;
+    bottom: -5px;
+    left: 0;
+    background-color: var(--accent-color);
+    transition: width 0.3s ease;
+}
+
+.navigation a:hover {
+    color: var(--accent-color);
+}
+
+.navigation a:hover::after {
+    width: 100%;
+}
+
+/* --- Hero Section --- */
+.hero {
+    position: relative;
+    height: 65vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    color: white;
+    background: linear-gradient(rgba(26, 58, 93, 0.75), rgba(26, 58, 93, 0.75)),
+                url('https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2070&auto=format&fit=crop') no-repeat center center/cover;
+}
+
+.heroContent {
+    animation: fadeIn 1.5s ease-in-out;
+    max-width: 800px;
+    padding: 0 2rem;
+}
+
+.hero h2 {
+    font-size: 3.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    line-height: 1.2;
+}
+
+.hero p {
+    font-size: 1.25rem;
+    font-weight: 300;
+}
+
+/* --- New Services Section Styles --- */
+.servicesSection {
+    padding: 4rem 2rem;
+    background-color: #ffffff;
+}
+
+.sectionTitle {
+    text-align: center;
+    font-size: 2.2rem;
+    font-weight: 600;
+    margin-bottom: 2.5rem;
+    color: var(--primary-color);
+}
+
+.servicesGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.serviceCard {
+    background-color: var(--light-bg-color);
+    padding: 2rem;
+    border-radius: var(--border-radius);
+    border: 1px solid #e9ecef;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.serviceCard:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+}
+
+.serviceCard h4 {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: var(--secondary-color);
+    margin-bottom: 1rem;
+}
+
+.serviceCard p {
+    font-size: 1rem;
+    line-height: 1.7;
+    color: var(--dark-text-color);
+}
+
+/* --- AI Agent & Form Section --- */
+.agentSection {
+    padding: 4rem 2rem;
+    text-align: center;
+    background-color: var(--light-bg-color);
+}
+
+.agentSection h3 {
+    font-size: 2.2rem;
+    font-weight: 600;
+    margin-bottom: 2rem;
+    color: var(--primary-color);
+}
+
+.agentForm {
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+.agentForm textarea {
+    width: 100%;
+    padding: 1.2rem;
+    border: 1px solid #ccc;
+    border-radius: var(--border-radius);
+    font-family: var(--font-family);
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+    resize: vertical;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.agentForm textarea:focus {
+    outline: none;
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 0 4px rgba(44, 93, 154, 0.2);
+}
+
+.submitBtn {
+    background-color: var(--secondary-color);
+    color: white;
+    border: none;
+    padding: 1rem 2.5rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+    box-shadow: 0 4px 15px rgba(44, 93, 154, 0.2);
+}
+
+.submitBtn:hover {
+    background-color: var(--primary-color);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(44, 93, 154, 0.3);
+}
+
+.submitBtn:disabled {
+    background-color: #95a5a6;
+    cursor: not-allowed;
+    transform: translateY(0);
+}
+
+/* --- Flash Messages Styling --- */
+.flash {
+    max-width: 700px;
+    margin: 0 auto 2rem auto;
+    padding: 1.2rem;
+    border-radius: var(--border-radius);
+    color: white;
+    text-align: left;
+    font-weight: 500;
+    animation: slideDown 0.5s ease-out;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.flash.success { background-color: var(--success-color); }
+.flash.error { background-color: var(--error-color); }
+.flash.info { background-color: var(--info-color); }
+
+/* --- Footer --- */
+.footer {
+    text-align: center;
+    padding: 2rem;
+    background-color: var(--dark-text-color);
+    color: var(--text-color);
+    font-size: 0.9rem;
+}
+
+/* --- Responsive Design --- */
+@media (max-width: 768px) {
+    .header {
+        flex-direction: column;
+        text-align: center;
+        padding: 1.5rem 1rem;
+    }
+
+    .navigation {
+        margin-top: 1.5rem;
+    }
+
+    .navigation a {
+        margin: 0 1rem;
+    }
+
+    .hero {
+        height: 50vh;
+    }
+
+    .hero h2 {
+        font-size: 2.5rem;
+    }
+
+    .hero p {
+        font-size: 1.1rem;
+    }
+
+    .agentSection, .servicesSection {
+        padding: 3rem 1rem;
+    }
+}

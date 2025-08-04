@@ -1,0 +1,54 @@
+/* styles/globals.css */
+/* This file contains global styles and CSS variables. */
+
+/* Import Google Font - This must be at the top */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+/* --- Global Styles & Variables --- */
+:root {
+    --primary-color: #1a3a5d; /* A slightly softer, more modern deep blue */
+    --secondary-color: #2c5d9a; /* A brighter, more inviting blue for interactions */
+    --accent-color: #e6b800; /* A richer, more vibrant gold */
+    --text-color: #f5f7fa; /* A clean, soft white for readability */
+    --dark-text-color: #2c3e50; /* A softer dark grey for body text */
+    --bg-color: #ffffff; /* Clean white background for sections */
+    --light-bg-color: #f8f9fa; /* A very light grey for subtle section differentiation */
+    --success-color: #2ecc71; /* A modern, flat green */
+    --error-color: #e74c3c; /* A modern, flat red */
+    --info-color: #3498db; /* A modern, flat blue */
+    --font-family: 'Poppins', sans-serif;
+    --border-radius: 12px; /* A more pronounced rounded corner */
+}
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+  font-family: var(--font-family), -apple-system, BlinkMacSystemFont, Segoe UI, Roboto,
+    Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+  background-color: var(--light-bg-color);
+  color: var(--dark-text-color);
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* --- Keyframe Animations --- */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}

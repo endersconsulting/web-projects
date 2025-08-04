@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}AI Essay Writer{% endblock %}
+
+{% block content %}
+<header>
+    <h1>✍️ AI Essay Writer</h1>
+    <p>Enter a topic and let Claude write a well-structured essay for you.</p>
+</header>
+
+<main>
+    <form id="essay-form">
+        <div class="input-container">
+            <input type="text" id="topic-input" name="topic" placeholder="e.g., The Impact of Renewable Energy" required maxlength="200" />
+        </div>
+        <div class="button-group">
+            <button type="submit" id="submit-btn">Generate Essay</button>
+            <button type="button" id="clear-btn">Clear</button>
+        </div>
+    </form>
+
+    <div id="result-container" class="result-container hidden">
+        <h2>Generated Essay</h2>
+        <div class="summary-box">
+            <pre id="essay-output"></pre>
+            <button id="copy-btn" class="copy-btn" title="Copy to Clipboard">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/><path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/></svg>
+                <span>Copy</span>
+            </button>
+        </div>
+    </div>
+
+    <div id="loading-indicator" class="loading-indicator hidden">
+        <div class="spinner"></div><p>Claude is writing...</p>
+    </div>
+    <div id="error-message" class="error-message hidden"></div>
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const form = document.getElementById('essay-form');
+        const topicInput = document.getElementById('topic-input');
+        const submitBtn = document.getElementById('submit-btn');
+        const clearBtn = document.getElementById('clear-btn');
+        const resultContainer = document.getElementById('result-container');
+        const essayOutput = document.getElementById('essay-output');
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const errorMessage = document.getElementById('error-message');
+        const copyBtn = document.getElementById('copy-btn');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            resultContainer.classList.add('hidden');
+            errorMessage.classList.add('hidden');
+            loadingIndicator.classList.remove('hidden');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Writing...';
+
+            try {
+                const response = await fetch('/generate-essay', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ topic: topicInput.value }),
+                });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error || 'An unknown error occurred.');
+                
+                essayOutput.textContent = data.essay;
+                resultContainer.classList.remove('hidden');
+            } catch (error) {
+                errorMessage.textContent = error.message;
+                errorMessage.classList.remove('hidden');
+            } finally {
+                loadingIndicator.classList.add('hidden');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Generate Essay';
+            }
+        });
+
+        clearBtn.addEventListener('click', () => {
+            topicInput.value = '';
+            resultContainer.classList.add('hidden');
+            errorMessage.classList.add('hidden');
+        });
+
+        copyBtn.addEventListener('click', () => {
+            navigator.clipboard.writeText(essayOutput.textContent).then(() => {
+                copyBtn.querySelector('span').textContent = 'Copied!';
+                setTimeout(() => { copyBtn.querySelector('span').textContent = 'Copy'; }, 2000);
+            });
+        });
+    });
+</script>
+{% endblock %}

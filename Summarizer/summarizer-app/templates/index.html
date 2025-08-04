@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}AI Text Summarizer{% endblock %}
+
+{% block content %}
+<div class="tool-container">
+    <header class="tool-header">
+        <h1><span class="header-icon">🤖</span> AI Text Summarizer</h1>
+        <p>Transform long texts into concise summaries using Claude AI</p>
+    </header>
+
+    <main>
+        <form id="summary-form">
+            <div class="form-section">
+                <h3><span class="icon">📄</span> Enter Your Text</h3>
+                <div class="textarea-container">
+                    <textarea id="text-input" name="text" placeholder="Paste or type your text here..." required maxlength="10000"></textarea>
+                    <div id="char-counter" class="char-counter">0 / 10,000</div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3><span class="icon">📏</span> Summary Length</h3>
+                <div class="summary-length-selector" id="length-selector">
+                    <button type="button" class="length-btn" data-value="short">Short</button>
+                    <button type="button" class="length-btn active" data-value="medium">Medium</button>
+                    <button type="button" class="length-btn" data-value="long">Long</button>
+                </div>
+                <input type="hidden" id="summary-length" name="length" value="medium">
+            </div>
+
+            <div class="button-group">
+                <button type="button" id="clear-btn" class="btn-secondary">Clear</button>
+                <button type="submit" id="submit-btn" class="btn-primary">Summarize</button>
+            </div>
+        </form>
+
+        <div id="loading-indicator" class="loading-indicator hidden">
+            <div class="spinner"></div><p>Claude is thinking...</p>
+        </div>
+        <div id="error-message" class="error-message hidden"></div>
+        
+        <div id="result-container" class="result-container hidden">
+            <h3><span class="icon">✨</span> Summary</h3>
+            <div class="summary-box">
+                <pre id="summary-output"></pre>
+                <button id="copy-btn" class="copy-btn" title="Copy to Clipboard">Copy</button>
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // --- Element Selectors ---
+    const form = document.getElementById('summary-form');
+    const textInput = document.getElementById('text-input');
+    const charCounter = document.getElementById('char-counter');
+    const lengthSelector = document.getElementById('length-selector');
+    const lengthButtons = document.querySelectorAll('.length-btn');
+    const hiddenLengthInput = document.getElementById('summary-length');
+    const submitBtn = document.getElementById('submit-btn');
+    const clearBtn = document.getElementById('clear-btn');
+    const resultContainer = document.getElementById('result-container');
+    const summaryOutput = document.getElementById('summary-output');
+    const loadingIndicator = document.getElementById('loading-indicator');
+    const errorMessage = document.getElementById('error-message');
+    const copyBtn = document.getElementById('copy-btn');
+    
+    const MAX_CHARS = 10000;
+
+    // --- Event Listeners ---
+
+    // Character Counter
+    textInput.addEventListener('input', () => {
+        charCounter.textContent = `${textInput.value.length} / ${MAX_CHARS}`;
+    });
+
+    // Summary Length Selector
+    lengthSelector.addEventListener('click', (e) => {
+        if (e.target.tagName === 'BUTTON') {
+            lengthButtons.forEach(btn => btn.classList.remove('active'));
+            e.target.classList.add('active');
+            hiddenLengthInput.value = e.target.dataset.value;
+        }
+    });
+
+    // Form Submission (AJAX)
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        // Reset UI
+        resultContainer.classList.add('hidden');
+        errorMessage.classList.add('hidden');
+        loadingIndicator.classList.remove('hidden');
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Working...';
+
+        const payload = {
+            text: textInput.value,
+            length: hiddenLengthInput.value
+        };
+
+        try {
+            const response = await fetch('/summarize', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || 'An unknown error occurred.');
+            
+            summaryOutput.textContent = data.summary;
+            resultContainer.classList.remove('hidden');
+
+        } catch (error) {
+            errorMessage.textContent = error.message;
+            errorMessage.classList.remove('hidden');
+        } finally {
+            loadingIndicator.classList.add('hidden');
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Summarize';
+        }
+    });
+
+    // Clear Button
+    clearBtn.addEventListener('click', () => {
+        textInput.value = '';
+        charCounter.textContent = `0 / ${MAX_CHARS}`;
+        resultContainer.classList.add('hidden');
+        errorMessage.classList.add('hidden');
+    });
+
+    // Copy Button
+    copyBtn.addEventListener('click', () => {
+        navigator.clipboard.writeText(summaryOutput.textContent).then(() => {
+            copyBtn.textContent = 'Copied!';
+            setTimeout(() => { copyBtn.textContent = 'Copy'; }, 2000);
+        });
+    });
+});
+</script>
+{% endblock %}

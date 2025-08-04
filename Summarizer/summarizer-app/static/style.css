@@ -1,0 +1,210 @@
+/* --- NEW MODERN UI STYLES --- */
+
+/* 1. Global Styles & Variables */
+:root {
+    --bg-color: #1a1a2e;
+    --card-color: #24243e;
+    --border-color: #4e4e6a;
+    --primary-text-color: #e0e0e0;
+    --secondary-text-color: #a0a0b8;
+    --accent-blue: #4a90e2;
+    --accent-purple: #9013fe;
+    --accent-purple-light: #a445fe;
+    --error-color: #ff6b6b;
+    --font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+body {
+    font-family: var(--font-family);
+    background-color: var(--bg-color);
+    color: var(--primary-text-color);
+    margin: 0;
+    padding: 0;
+}
+
+/* 2. Navigation Bar (Kept from previous version) */
+.navbar {
+    background-color: #161625;
+    border-bottom: 1px solid var(--border-color);
+    padding: 0 2rem;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+.nav-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 70px;
+}
+.nav-brand {
+    font-size: 1.5rem; font-weight: 700; color: var(--primary-text-color); text-decoration: none;
+}
+.nav-links {
+    list-style: none; display: flex; gap: 2rem; margin: 0; padding: 0;
+}
+.nav-links a {
+    color: var(--secondary-text-color); text-decoration: none; font-weight: 500;
+    padding: 0.5rem 0; border-bottom: 2px solid transparent;
+    transition: color 0.3s ease, border-bottom-color 0.3s ease;
+}
+.nav-links a:hover { color: var(--primary-text-color); }
+.nav-links a.active { color: var(--accent-blue); border-bottom-color: var(--accent-blue); }
+
+/* 3. Main Tool Layout */
+.tool-container {
+    max-width: 768px;
+    margin: 2rem auto;
+    padding: 2rem;
+}
+
+.tool-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+.tool-header h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin: 0 0 0.5rem 0;
+    color: #fff;
+}
+.tool-header .header-icon { font-size: 2.8rem; vertical-align: middle; margin-right: 0.5rem; }
+.tool-header p {
+    font-size: 1.1rem;
+    color: var(--secondary-text-color);
+    max-width: 450px;
+    margin: 0 auto;
+}
+
+/* 4. Form Sections */
+.form-section {
+    background-color: var(--card-color);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+.form-section h3 {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--secondary-text-color);
+    margin: 0 0 1rem 0;
+    display: flex;
+    align-items: center;
+}
+.form-section h3 .icon { margin-right: 0.5rem; }
+
+/* 5. Text Area */
+.textarea-container { position: relative; }
+textarea {
+    width: 100%; height: 200px; padding: 1rem;
+    font-family: var(--font-family); font-size: 1rem;
+    color: var(--primary-text-color); background-color: var(--bg-color);
+    border: 1px solid var(--border-color); border-radius: 8px;
+    resize: vertical; box-sizing: border-box;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+textarea:focus {
+    outline: none; border-color: var(--accent-blue);
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.3);
+}
+.char-counter {
+    position: absolute; bottom: 12px; right: 12px;
+    font-size: 0.8rem; color: var(--secondary-text-color);
+}
+
+/* 6. Summary Length Selector (Segmented Control) */
+.summary-length-selector {
+    display: flex;
+    background-color: var(--bg-color);
+    border-radius: 8px;
+    padding: 4px;
+    border: 1px solid var(--border-color);
+}
+.length-btn {
+    flex: 1; padding: 0.6rem 1rem;
+    background-color: transparent;
+    color: var(--secondary-text-color);
+    border: none; border-radius: 6px;
+    font-size: 0.9rem; font-weight: 500;
+    cursor: pointer; transition: all 0.3s ease;
+}
+.length-btn.active {
+    background-color: var(--accent-blue);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(74, 144, 226, 0.3);
+}
+
+/* 7. Action Buttons */
+.button-group {
+    display: flex; justify-content: flex-end; gap: 1rem;
+    margin-top: 1.5rem;
+}
+.btn-secondary, .btn-primary {
+    padding: 0.75rem 1.5rem; font-size: 1rem; font-weight: 500;
+    border-radius: 8px; border: none; cursor: pointer;
+    transition: all 0.3s ease;
+}
+.btn-secondary {
+    background-color: var(--card-color);
+    border: 1px solid var(--border-color);
+    color: var(--primary-text-color);
+}
+.btn-secondary:hover { background-color: #33334f; }
+.btn-primary {
+    color: #fff;
+    background-image: linear-gradient(to right, var(--accent-purple), var(--accent-blue));
+    background-size: 200% auto;
+}
+.btn-primary:hover { background-position: right center; }
+.btn-primary:disabled {
+    background: var(--border-color); cursor: not-allowed;
+}
+
+/* 8. Result, Loading, Error States */
+.hidden { display: none; }
+.loading-indicator { text-align: center; margin-top: 2rem; display: flex; align-items: center; justify-content: center; gap: 1rem;}
+.spinner {
+    width: 24px; height: 24px; border: 3px solid var(--border-color);
+    border-top-color: var(--accent-purple); border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+.error-message, .result-container {
+    margin-top: 2rem;
+    background-color: var(--card-color);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    animation: fadeIn 0.5s ease;
+}
+.error-message { border-color: var(--error-color); color: var(--error-color); }
+.summary-box { position: relative; }
+pre {
+    white-space: pre-wrap; word-wrap: break-word; font-family: var(--font-family);
+    font-size: 1rem; line-height: 1.7; color: var(--primary-text-color);
+    margin: 0; padding: 0;
+}
+.copy-btn {
+    position: absolute; top: -5px; right: -5px;
+    background-color: #33334f; color: var(--secondary-text-color);
+    border: 1px solid var(--border-color); padding: 0.4rem 0.8rem;
+    border-radius: 6px; cursor: pointer; transition: all 0.3s ease;
+}
+.copy-btn:hover { background-color: var(--border-color); color: var(--primary-text-color); }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Essay writer page needs this too */
+.input-container input {
+    width: 100%; padding: 1rem; font-family: var(--font-family); font-size: 1rem;
+    color: var(--primary-text-color); background-color: var(--bg-color);
+    border: 1px solid var(--border-color); border-radius: 8px;
+    box-sizing: border-box; transition: all 0.3s ease;
+}
+.input-container input:focus {
+    outline: none; border-color: var(--accent-blue);
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.3);
+}
