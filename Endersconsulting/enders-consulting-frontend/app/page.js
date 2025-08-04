@@ -22,7 +22,7 @@ export default function Home() {
 
     try {
       // Send a POST request to our Flask backend API
-      const res = await fetch('http://localhost:5001/api/ask', {
+      const res = await fetch('/api/ask', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
