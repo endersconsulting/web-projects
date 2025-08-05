@@ -79,7 +79,7 @@ export default function Home() {
           <a href="#">Home</a>
           <a href="#">About Us</a>
           <a href="#">Services</a>
-          <a href="#">Contact</a>
+          <a href="mailto:info@endersconsulting.cloud">Contact</a>
         </nav>
       </header>
 
