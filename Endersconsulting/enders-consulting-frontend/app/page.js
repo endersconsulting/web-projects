@@ -1,5 +1,5 @@
 // app/page.js
-// This is the main frontend component for the homepage, updated with new service descriptions.
+// This is the main frontend component for the homepage, updated with the n8n webhook trigger.
 
 "use client"; // This directive is essential for components using hooks like useState.
 
@@ -20,8 +20,28 @@ export default function Home() {
     setIsLoading(true);
     setResponse(null);
 
+    // --- Trigger n8n Webhook ---
+    // This sends the user's query to your n8n workflow as soon as they submit it.
+    // This is a "fire and forget" call; we don't wait for a response from n8n
+    // before proceeding with the main application logic.
     try {
-      // Send a POST request to our Flask backend API
+      fetch('https://rainerai.app.n8n.cloud/form/220bda16-7f0e-402d-8eb4-6fb7cdc7fa55', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+            source: 'endersconsulting.cloud',
+            inquiry: query 
+        })
+      });
+    } catch (n8nError) {
+        // We log the error for debugging but don't show it to the user,
+        // as the main functionality (getting a response from our AI) can still proceed.
+        console.error("Failed to trigger n8n webhook:", n8nError);
+    }
+    
+    // --- Get AI Response from Flask Backend ---
+    try {
+      // Note: Using a relative URL for the API call to work correctly after deployment.
       const res = await fetch('/api/ask', {
         method: 'POST',
         headers: {
