@@ -1,7 +1,6 @@
 # app.py
 # Backend API for the Enders Consulting application.
 # This Flask app handles API requests from the Next.js frontend.
-
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
@@ -9,9 +8,17 @@ from flask_cors import CORS
 app = Flask(__name__)
 
 # --- CORS Configuration ---
-# This is crucial for allowing the Next.js frontend (running on a different port)
-# to make requests to this Flask backend.
-CORS(app, resources={r"/api/*": {"origins": "http://localhost:3000"}}) # Adjust origin for production
+# This is crucial for allowing the Next.js frontend to make requests to this Flask backend.
+# Updated to allow both localhost (development) and production domain
+CORS(app, resources={
+    r"/api/*": {
+        "origins": [
+            "http://localhost:3000",  # Development
+            "https://endersconsulting.cloud",  # Production
+            "https://www.endersconsulting.cloud"  # Production with www
+        ]
+    }
+})
 
 @app.route('/api/ask', methods=['POST'])
 def ask_agent():
@@ -21,20 +28,21 @@ def ask_agent():
     """
     # Get the JSON data sent from the frontend
     data = request.get_json()
+    
     if not data or 'query' not in data:
         return jsonify({'error': 'No query provided.'}), 400
-
+    
     user_query = data.get('query', '').strip().lower()
-
+    
     if not user_query:
         return jsonify({'error': 'Query cannot be empty.'}), 400
-
+    
     # --- Simulated AI Agent Logic ---
     # This logic remains the same, but instead of flashing messages,
     # it prepares a JSON response.
     response_message = ""
     response_category = "success"
-
+    
     if 'services' in user_query:
         response_message = "Enders Consulting offers a range of services including strategic planning, technology integration, and operational improvement. How can we help you specifically?"
     elif 'contact' in user_query:
@@ -46,14 +54,20 @@ def ask_agent():
     else:
         response_message = "Thank you for your inquiry. While I'm a simple AI, a human representative will review your question and get back to you shortly."
         response_category = "info"
-
+    
     # Return the response as a JSON object
     return jsonify({
         'message': response_message,
         'category': response_category
     })
 
+# Health check endpoint
+@app.route('/api/health', methods=['GET'])
+def health_check():
+    """Simple health check endpoint"""
+    return jsonify({'status': 'healthy', 'service': 'enders-consulting-api'})
+
 # This allows the script to be run directly using `python app.py`
 if __name__ == '__main__':
     # The API will run on port 5001 to avoid conflict with Next.js (port 3000)
-    app.run(port=5001, debug=True)
+    app.run(host='127.0.0.1', port=5001, debug=True)
