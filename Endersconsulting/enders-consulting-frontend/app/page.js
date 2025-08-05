@@ -25,7 +25,7 @@ export default function Home() {
     // This is a "fire and forget" call; we don't wait for a response from n8n
     // before proceeding with the main application logic.
     try {
-      fetch('https://rainerai.app.n8n.cloud/webhook/3d8e4060-3147-4861-9e9b-1c1a6f206a3a', {
+      fetch('https://rainerai.app.n8n.cloud/webhook-test/2647556c-ad0a-4f92-ae80-d87218daa1f1', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
