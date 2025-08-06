@@ -151,7 +151,22 @@ export default function Home() {
           </div>
         </section>
 
-        {/* NEW Detailed Inquiry Section */}
+        {/* Existing Services Section - MOVED UP */}
+        <section className={styles.servicesSection}>
+            <h3 className={styles.sectionTitle}>Our Core Expertise</h3>
+            <div className={styles.servicesGrid}>
+                <div className={styles.serviceCard}>
+                    <h4>AI-Powered Business Solutions</h4>
+                    <p>We harness the power of artificial intelligence to unlock new efficiencies, drive innovation, and create intelligent workflows. From predictive analytics to automated processes, our solutions are tailored to give your business a competitive edge.</p>
+                </div>
+                <div className={styles.serviceCard}>
+                    <h4>High-Security Identity & Access Management</h4>
+                    <p>In a world of evolving threats, we design and implement high-security Identity Access Management (IAM) and Privileged Access & Endpoint Management (PAM/PEDM) solutions to protect your most critical systems and data.</p>
+                </div>
+            </div>
+        </section>
+
+        {/* Detailed Inquiry Section - MOVED DOWN */}
         <section className={styles.inquirySection}>
             <div className={styles.sectionHeader}>
                 <h3 className={styles.sectionTitle}>What is on your mind or To Do list?</h3>
@@ -194,22 +209,7 @@ export default function Home() {
             </form>
         </section>
 
-        {/* Existing Services Section */}
-        <section className={styles.servicesSection}>
-            <h3 className={styles.sectionTitle}>Our Core Expertise</h3>
-            <div className={styles.servicesGrid}>
-                <div className={styles.serviceCard}>
-                    <h4>AI-Powered Business Solutions</h4>
-                    <p>We harness the power of artificial intelligence to unlock new efficiencies, drive innovation, and create intelligent workflows. From predictive analytics to automated processes, our solutions are tailored to give your business a competitive edge.</p>
-                </div>
-                <div className={styles.serviceCard}>
-                    <h4>High-Security Identity & Access Management</h4>
-                    <p>In a world of evolving threats, we design and implement high-security Identity Access Management (IAM) and Privileged Access & Endpoint Management (PAM/PEDM) solutions to protect your most critical systems and data.</p>
-                </div>
-            </div>
-        </section>
-
-        {/* MOVED AI Agent Interaction Section */}
+        {/* AI Agent Interaction Section */}
         <section className={styles.agentSection}>
           <h3>Have a Quick Question?</h3>
           <p>Ask our AI assistant for a fast response.</p>
