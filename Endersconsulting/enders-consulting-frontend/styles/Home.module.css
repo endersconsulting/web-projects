@@ -101,6 +101,7 @@
 }
 
 .sectionTitle {
+    text-align: center; /* This ensures all section titles are centered */
     font-size: 2.2rem;
     font-weight: 600;
     margin-bottom: 0.5rem;
