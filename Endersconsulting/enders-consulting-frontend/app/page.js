@@ -1,72 +1,131 @@
 // app/page.js
-// This is the main frontend component for the homepage, updated with the n8n webhook trigger.
+// This is the main frontend component, updated with the new contact form.
 
-"use client"; // This directive is essential for components using hooks like useState.
+"use client";
 
 import { useState } from 'react';
 import styles from '../styles/Home.module.css';
 
 export default function Home() {
-  // State variables to manage the form input and the response from the API
+  // State to handle the new, more detailed form fields
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    website: '',
+    phone: '',
+    inquiry: ''
+  });
+
+  // State for the general AI assistant form at the bottom
   const [query, setQuery] = useState('');
+  
   const [response, setResponse] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Function to handle the form submission
-  const handleSubmit = async (e) => {
-    e.preventDefault(); // Prevent default form submission behavior
-    if (!query.trim()) return; // Don't submit if the query is empty
+  // A single handler for input changes in the detailed contact form
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  // Handler for the detailed contact form submission
+  const handleContactSubmit = async (e) => {
+    e.preventDefault();
+    
+    // Basic validation for required fields
+    if (!formData.name.trim() || !formData.email.trim() || !formData.inquiry.trim()) {
+      setResponse({
+        category: 'error',
+        message: 'Please fill out all required fields: Name, Email, and Inquiry.'
+      });
+      return;
+    }
+
+    // Email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      setResponse({
+        category: 'error',
+        message: 'Please enter a valid email address.'
+      });
+      return;
+    }
 
     setIsLoading(true);
     setResponse(null);
 
-    // --- Trigger n8n Webhook ---
-    // This sends the user's query to your n8n workflow as soon as they submit it.
-    // This is a "fire and forget" call; we don't wait for a response from n8n
-    // before proceeding with the main application logic.
+    // --- Trigger n8n Webhook with detailed prospect data ---
     try {
-      fetch('https://rainerai.app.n8n.cloud/webhook-test/7e51e32e-4819-45e8-a12b-de784f97f71f', {
+      const webhookPayload = {
+        source: 'endersconsulting.cloud-contact-form',
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        website: formData.website.trim(),
+        phone: formData.phone.trim(),
+        inquiry: formData.inquiry.trim(),
+        timestamp: new Date().toISOString()
+      };
+
+      // Using the new webhook URL you provided
+      await fetch('https://rainerai.app.n8n.cloud/webhook-test/7e51e32e-4819-45e8-a12b-de784f97f71f', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-            source: 'endersconsulting.cloud',
-            inquiry: query 
-        })
+        body: JSON.stringify(webhookPayload)
       });
+
+      setResponse({
+          category: 'success',
+          message: 'Thank you for your inquiry! We have received your information and will get back to you shortly.'
+      });
+      
+      // Clear form after successful submission
+      setFormData({ name: '', email: '', website: '', phone: '', inquiry: '' });
+
     } catch (n8nError) {
-        // We log the error for debugging but don't show it to the user,
-        // as the main functionality (getting a response from our AI) can still proceed.
-        console.error("Failed to trigger n8n webhook:", n8nError);
+      console.error("Failed to trigger n8n webhook:", n8nError);
+      setResponse({
+        category: 'error',
+        message: 'Sorry, we encountered an issue submitting your form. Please try again later.'
+      });
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  // Handler for the simple AI assistant form at the bottom
+  const handleQuerySubmit = async (e) => {
+    e.preventDefault();
+    if (!query.trim()) return;
+
+    setIsLoading(true);
+    setResponse(null);
     
-    // --- Get AI Response from Flask Backend ---
     try {
-      // Note: Using a relative URL for the API call to work correctly after deployment.
       const res = await fetch('/api/ask', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query }),
       });
 
-      if (!res.ok) {
-        throw new Error('Network response was not ok');
-      }
+      if (!res.ok) throw new Error('Network response was not ok');
 
       const data = await res.json();
-      setResponse(data); // Store the response from the API
+      setResponse(data);
+      setQuery(''); // Clear query input
     } catch (error) {
-      // Handle errors (e.g., network issue or API error)
       setResponse({
         category: 'error',
         message: 'Sorry, something went wrong. Please try again later.',
       });
       console.error("Failed to fetch from API:", error);
     } finally {
-      setIsLoading(false); // Stop the loading indicator
+      setIsLoading(false);
     }
   };
+
 
   return (
     <div className={styles.container}>
@@ -92,7 +151,50 @@ export default function Home() {
           </div>
         </section>
 
-        {/* New Services Section */}
+        {/* NEW Detailed Inquiry Section */}
+        <section className={styles.inquirySection}>
+            <div className={styles.sectionHeader}>
+                <h3 className={styles.sectionTitle}>What is on your mind or To Do list?</h3>
+                <p className={styles.sectionSubtitle}>How can we assist you? Please provide us with some pieces of information and we will get back to you to discuss.</p>
+            </div>
+
+            {/* Response Message Display Area for this form */}
+            {response && (
+              <div className={`${styles.flash} ${styles[response.category]}`}>
+                {response.message}
+              </div>
+            )}
+
+            <form onSubmit={handleContactSubmit} className={styles.contactForm}>
+                <div className={styles.formGrid}>
+                    <div className={styles.formGroup}>
+                        <label htmlFor="name">Your Name *</label>
+                        <input type="text" id="name" name="name" value={formData.name} onChange={handleInputChange} placeholder="e.g., Jane Doe" required disabled={isLoading} />
+                    </div>
+                    <div className={styles.formGroup}>
+                        <label htmlFor="email">Your Email *</label>
+                        <input type="email" id="email" name="email" value={formData.email} onChange={handleInputChange} placeholder="e.g., jane.doe@example.com" required disabled={isLoading} />
+                    </div>
+                    <div className={styles.formGroup}>
+                        <label htmlFor="website">Your Company Website</label>
+                        <input type="url" id="website" name="website" value={formData.website} onChange={handleInputChange} placeholder="https://your-company.com" disabled={isLoading} />
+                    </div>
+                    <div className={styles.formGroup}>
+                        <label htmlFor="phone">Your Phone Number</label>
+                        <input type="tel" id="phone" name="phone" value={formData.phone} onChange={handleInputChange} placeholder="(555) 123-4567" disabled={isLoading} />
+                    </div>
+                </div>
+                <div className={styles.formGroup}>
+                    <label htmlFor="inquiry">Your Inquiry *</label>
+                    <textarea id="inquiry" name="inquiry" value={formData.inquiry} onChange={handleInputChange} placeholder="Tell us about your project or how we can help..." rows="5" required disabled={isLoading} />
+                </div>
+                <button type="submit" className={styles.submitBtn} disabled={isLoading}>
+                    {isLoading ? 'Submitting...' : 'Submit Inquiry'}
+                </button>
+            </form>
+        </section>
+
+        {/* Existing Services Section */}
         <section className={styles.servicesSection}>
             <h3 className={styles.sectionTitle}>Our Core Expertise</h3>
             <div className={styles.servicesGrid}>
@@ -107,28 +209,21 @@ export default function Home() {
             </div>
         </section>
 
-        {/* AI Agent Interaction Section */}
+        {/* MOVED AI Agent Interaction Section */}
         <section className={styles.agentSection}>
-          <h3>Have a Question? Ask Our AI Assistant.</h3>
-
-          {/* Response Message Display Area */}
-          {response && (
-            <div className={`${styles.flash} ${styles[response.category]}`}>
-              {response.message}
-            </div>
-          )}
-
-          {/* Form for submitting inquiries */}
-          <form onSubmit={handleSubmit} className={styles.agentForm}>
+          <h3>Have a Quick Question?</h3>
+          <p>Ask our AI assistant for a fast response.</p>
+          
+          <form onSubmit={handleQuerySubmit} className={styles.agentForm}>
             <textarea
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Type your inquiry here... e.g., 'What services do you offer?'"
+              placeholder="Type your general question here..."
               rows="4"
               disabled={isLoading}
             />
             <button type="submit" className={styles.submitBtn} disabled={isLoading}>
-              {isLoading ? 'Submitting...' : 'Submit Inquiry'}
+              {isLoading ? 'Asking...' : 'Ask AI'}
             </button>
           </form>
         </section>
