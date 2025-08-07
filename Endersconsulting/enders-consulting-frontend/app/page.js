@@ -70,7 +70,7 @@ export default function Home() {
       };
 
       // Using the new webhook URL you provided
-      await fetch('https://rainerai.app.n8n.cloud/webhook-test/7e51e32e-4819-45e8-a12b-de784f97f71f', {
+      await fetch('https://rainerai.app.n8n.cloud/webhook/7e51e32e-4819-45e8-a12b-de784f97f71f', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(webhookPayload)
