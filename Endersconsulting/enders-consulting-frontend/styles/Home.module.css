@@ -38,36 +38,37 @@
     transition: color 0.3s ease;
 }
 
-.navigation a::after {
-    content: '';
-    position: absolute;
-    width: 0;
-    height: 2px;
-    bottom: -5px;
-    left: 0;
-    background-color: var(--accent-color);
-    transition: width 0.3s ease;
-}
-
 .navigation a:hover {
     color: var(--accent-color);
 }
 
-.navigation a:hover::after {
-    width: 100%;
+.contactButton {
+    background-color: var(--accent-color);
+    color: var(--primary-color) !important;
+    padding: 0.6rem 1.2rem;
+    border-radius: var(--border-radius);
+    font-weight: 600;
+    transition: background-color 0.3s ease, transform 0.2s ease;
 }
+
+.contactButton:hover {
+    background-color: #fff;
+    color: var(--primary-color) !important;
+    transform: translateY(-2px);
+}
+
 
 /* --- Hero Section --- */
 .hero {
     position: relative;
-    height: 65vh;
+    height: 60vh;
     display: flex;
     justify-content: center;
     align-items: center;
     text-align: center;
     color: white;
-    background: linear-gradient(rgba(26, 58, 93, 0.75), rgba(26, 58, 93, 0.75)),
-                url('https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2070&auto=format&fit=crop') no-repeat center center/cover;
+    background: linear-gradient(rgba(26, 58, 93, 0.8), rgba(26, 58, 93, 0.8)),
+                url('https://images.unsplash.com/photo-1519389950473-47ba0277781c?q=80&w=2070&auto=format&fit=crop') no-repeat center center/cover;
 }
 
 .heroContent {
@@ -88,7 +89,81 @@
     font-weight: 300;
 }
 
-/* --- NEW Detailed Inquiry Section Styles --- */
+/* --- Section Headers --- */
+.sectionTitle {
+    text-align: center;
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 2.5rem;
+    color: var(--primary-color);
+}
+
+.sectionSubtitle {
+    font-size: 1.1rem;
+    color: #555;
+    line-height: 1.6;
+}
+
+/* --- NEW Services Section Styles --- */
+.servicesSection {
+    padding: 4rem 2rem;
+    background-color: var(--light-bg-color);
+}
+
+.servicesGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.serviceCard {
+    background-color: #ffffff;
+    padding: 2.5rem 2rem;
+    border-radius: var(--border-radius);
+    border: 1px solid #e9ecef;
+    text-align: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.serviceCard:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+}
+
+.serviceIcon {
+    margin: 0 auto 1.5rem auto;
+    height: 60px;
+    width: 60px;
+    border-radius: 50%;
+    background-color: var(--secondary-color);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.serviceIcon svg {
+    width: 32px;
+    height: 32px;
+}
+
+.serviceCard h4 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+.serviceCard p {
+    font-size: 1rem;
+    line-height: 1.7;
+    color: var(--dark-text-color);
+}
+
+
+/* --- Detailed Inquiry Section Styles --- */
 .inquirySection {
     padding: 4rem 2rem;
     background-color: var(--bg-color);
@@ -98,20 +173,6 @@
     text-align: center;
     max-width: 700px;
     margin: 0 auto 2.5rem auto;
-}
-
-.sectionTitle {
-    text-align: center; /* This ensures all section titles are centered */
-    font-size: 2.2rem;
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-    color: var(--primary-color);
-}
-
-.sectionSubtitle {
-    font-size: 1.1rem;
-    color: #555;
-    line-height: 1.6;
 }
 
 .contactForm {
@@ -158,89 +219,6 @@
     box-shadow: 0 0 0 4px rgba(44, 93, 154, 0.2);
 }
 
-/* --- Services Section Styles --- */
-.servicesSection {
-    padding: 4rem 2rem;
-    background-color: var(--light-bg-color);
-}
-
-.servicesGrid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 2rem;
-    max-width: 1100px;
-    margin: 0 auto;
-}
-
-.serviceCard {
-    background-color: #ffffff;
-    padding: 2rem;
-    border-radius: var(--border-radius);
-    border: 1px solid #e9ecef;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.serviceCard:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
-}
-
-.serviceCard h4 {
-    font-size: 1.4rem;
-    font-weight: 600;
-    color: var(--secondary-color);
-    margin-bottom: 1rem;
-}
-
-.serviceCard p {
-    font-size: 1rem;
-    line-height: 1.7;
-    color: var(--dark-text-color);
-}
-
-/* --- AI Agent & Form Section --- */
-.agentSection {
-    padding: 4rem 2rem;
-    text-align: center;
-    background-color: #eef2f5; /* A slightly different background */
-}
-
-.agentSection h3 {
-    font-size: 2.2rem;
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-    color: var(--primary-color);
-}
-
-.agentSection p {
-    margin-bottom: 2rem;
-    color: #555;
-}
-
-.agentForm {
-    max-width: 700px;
-    margin: 0 auto;
-}
-
-.agentForm textarea {
-    width: 100%;
-    padding: 1.2rem;
-    border: 1px solid #ccc;
-    border-radius: var(--border-radius);
-    font-family: var(--font-family);
-    font-size: 1rem;
-    margin-bottom: 1.5rem;
-    resize: vertical;
-    transition: border-color 0.3s ease, box-shadow 0.3s ease;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-}
-
-.agentForm textarea:focus {
-    outline: none;
-    border-color: var(--secondary-color);
-    box-shadow: 0 0 0 4px rgba(44, 93, 154, 0.2);
-}
-
 .submitBtn {
     background-color: var(--secondary-color);
     color: white;
@@ -252,6 +230,8 @@
     cursor: pointer;
     transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
     box-shadow: 0 4px 15px rgba(44, 93, 154, 0.2);
+    align-self: center; /* Center the button in the form */
+    margin-top: 1rem;
 }
 
 .submitBtn:hover:not(:disabled) {
@@ -321,7 +301,7 @@
         font-size: 1.1rem;
     }
 
-    .inquirySection, .agentSection, .servicesSection {
+    .inquirySection, .servicesSection {
         padding: 3rem 1rem;
     }
 

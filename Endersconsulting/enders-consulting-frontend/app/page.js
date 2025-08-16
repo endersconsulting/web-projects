@@ -1,5 +1,5 @@
 // app/page.js
-// This is the main frontend component, updated with the new contact form.
+// This is the main frontend component, redesigned to model langtech.com.
 
 "use client";
 
@@ -7,7 +7,7 @@ import { useState } from 'react';
 import styles from '../styles/Home.module.css';
 
 export default function Home() {
-  // State to handle the new, more detailed form fields
+  // State for the detailed contact form
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -15,14 +15,11 @@ export default function Home() {
     phone: '',
     inquiry: ''
   });
-
-  // State for the general AI assistant form at the bottom
-  const [query, setQuery] = useState('');
   
   const [response, setResponse] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // A single handler for input changes in the detailed contact form
+  // Handler for input changes in the contact form
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -31,11 +28,10 @@ export default function Home() {
     }));
   };
 
-  // Handler for the detailed contact form submission
+  // Handler for the contact form submission
   const handleContactSubmit = async (e) => {
     e.preventDefault();
     
-    // Basic validation for required fields
     if (!formData.name.trim() || !formData.email.trim() || !formData.inquiry.trim()) {
       setResponse({
         category: 'error',
@@ -44,7 +40,6 @@ export default function Home() {
       return;
     }
 
-    // Email format validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
       setResponse({
@@ -57,7 +52,6 @@ export default function Home() {
     setIsLoading(true);
     setResponse(null);
 
-    // --- Trigger n8n Webhook with detailed prospect data ---
     try {
       const webhookPayload = {
         source: 'endersconsulting.cloud-contact-form',
@@ -69,7 +63,6 @@ export default function Home() {
         timestamp: new Date().toISOString()
       };
 
-      // Using the new webhook URL you provided
       await fetch('https://rainerai.app.n8n.cloud/webhook/7e51e32e-4819-45e8-a12b-de784f97f71f', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -81,7 +74,6 @@ export default function Home() {
           message: 'Thank you for your inquiry! We have received your information and will get back to you shortly.'
       });
       
-      // Clear form after successful submission
       setFormData({ name: '', email: '', website: '', phone: '', inquiry: '' });
 
     } catch (n8nError) {
@@ -95,38 +87,6 @@ export default function Home() {
     }
   };
 
-  // Handler for the simple AI assistant form at the bottom
-  const handleQuerySubmit = async (e) => {
-    e.preventDefault();
-    if (!query.trim()) return;
-
-    setIsLoading(true);
-    setResponse(null);
-    
-    try {
-      const res = await fetch('/api/ask', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query }),
-      });
-
-      if (!res.ok) throw new Error('Network response was not ok');
-
-      const data = await res.json();
-      setResponse(data);
-      setQuery(''); // Clear query input
-    } catch (error) {
-      setResponse({
-        category: 'error',
-        message: 'Sorry, something went wrong. Please try again later.',
-      });
-      console.error("Failed to fetch from API:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-
   return (
     <div className={styles.container}>
       {/* Header Section */}
@@ -138,7 +98,7 @@ export default function Home() {
           <a href="#">Home</a>
           <a href="#">About Us</a>
           <a href="#">Services</a>
-          <a href="mailto:info@endersconsulting.cloud">Contact</a>
+          <a href="mailto:info@endersconsulting.cloud" className={styles.contactButton}>Contact Us</a>
         </nav>
       </header>
 
@@ -146,34 +106,46 @@ export default function Home() {
         {/* Hero Section */}
         <section className={styles.hero}>
           <div className={styles.heroContent}>
-            <h2>Achieving Excellence, Together.</h2>
-            <p>We partner with visionary leaders to solve their most critical challenges, leveraging AI-powered solutions and implementing fortress-level security for your digital assets.</p>
+            <h2>AI-Powered Security and Business Transformation</h2>
+            <p>We deliver cutting-edge Cybersecurity and AI solutions to protect your assets and accelerate your growth.</p>
           </div>
         </section>
 
-        {/* Existing Services Section - MOVED UP */}
+        {/* NEW Services Section */}
         <section className={styles.servicesSection}>
-            <h3 className={styles.sectionTitle}>Our Core Expertise</h3>
+            <h3 className={styles.sectionTitle}>Our Services</h3>
             <div className={styles.servicesGrid}>
                 <div className={styles.serviceCard}>
-                    <h4>AI-Powered Business Solutions</h4>
-                    <p>We harness the power of artificial intelligence to unlock new efficiencies, drive innovation, and create intelligent workflows. From predictive analytics to automated processes, our solutions are tailored to give your business a competitive edge.</p>
+                    <div className={styles.serviceIcon}>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 14l9-5-9-5-9 5 9 5z"/><path d="M12 14l6.16-3.422a12.03 12.03 0 0 1 0-1.156L12 14z"/><path d="M12 14l-6.16-3.422a12.03 12.03 0 0 0 0-1.156L12 14z"/><path d="M12 14v7l9-5v-7l-9 5z"/><path d="M12 21v-7l-9-5v7l9 5z"/></svg>
+                    </div>
+                    <h4>Cybersecurity & AI Training</h4>
+                    <p>Empower your team with the knowledge to navigate the complexities of modern cyber threats and leverage AI for a competitive advantage.</p>
                 </div>
                 <div className={styles.serviceCard}>
-                    <h4>High-Security Identity & Access Management</h4>
-                    <p>In a world of evolving threats, we design and implement high-security Identity Access Management (IAM) and Privileged Access & Endpoint Management (PAM/PEDM) solutions to protect your most critical systems and data.</p>
+                    <div className={styles.serviceIcon}>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    </div>
+                    <h4>Cybersecurity & AI Solutions</h4>
+                    <p>We design and implement robust security architectures, including advanced IAM and PAM, integrated with intelligent AI-driven threat detection.</p>
+                </div>
+                <div className={styles.serviceCard}>
+                    <div className={styles.serviceIcon}>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>
+                    </div>
+                    <h4>Cybersecurity & CISO Services</h4>
+                    <p>Gain executive-level security leadership with our virtual CISO services, providing strategic guidance, risk management, and compliance oversight.</p>
                 </div>
             </div>
         </section>
 
-        {/* Detailed Inquiry Section - MOVED DOWN */}
+        {/* Detailed Inquiry Section */}
         <section className={styles.inquirySection}>
             <div className={styles.sectionHeader}>
                 <h3 className={styles.sectionTitle}>What is on your mind or To Do list?</h3>
-                <p className={styles.sectionSubtitle}>How can we assist you? Please provide us with some pieces of information and we will get back to you to discuss.</p>
+                <p className={styles.sectionSubtitle}>Please provide us with some information, and we will get back to you to discuss how we can assist.</p>
             </div>
 
-            {/* Response Message Display Area for this form */}
             {response && (
               <div className={`${styles.flash} ${styles[response.category]}`}>
                 {response.message}
@@ -207,25 +179,6 @@ export default function Home() {
                     {isLoading ? 'Submitting...' : 'Submit Inquiry'}
                 </button>
             </form>
-        </section>
-
-        {/* AI Agent Interaction Section */}
-        <section className={styles.agentSection}>
-          <h3>Have a Quick Question?</h3>
-          <p>Ask our AI assistant for a fast response.</p>
-          
-          <form onSubmit={handleQuerySubmit} className={styles.agentForm}>
-            <textarea
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Type your general question here..."
-              rows="4"
-              disabled={isLoading}
-            />
-            <button type="submit" className={styles.submitBtn} disabled={isLoading}>
-              {isLoading ? 'Asking...' : 'Ask AI'}
-            </button>
-          </form>
         </section>
       </main>
 
