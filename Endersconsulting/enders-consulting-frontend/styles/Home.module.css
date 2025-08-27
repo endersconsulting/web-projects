@@ -58,10 +58,10 @@
 }
 
 
-/* --- Hero Section --- */
+/* --- Hero Section (BANNER SIZE REDUCED) --- */
 .hero {
     position: relative;
-    height: 60vh;
+    height: 40vh; /* <-- Reduced from 60vh to make the banner smaller */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -104,7 +104,7 @@
     line-height: 1.6;
 }
 
-/* --- NEW Services Section Styles --- */
+/* --- Services Section Styles --- */
 .servicesSection {
     padding: 4rem 2rem;
     background-color: var(--light-bg-color);
@@ -162,6 +162,68 @@
     color: var(--dark-text-color);
 }
 
+/* --- NEW: Security in the News Section --- */
+.newsSection {
+    padding: 4rem 2rem;
+    background-color: var(--bg-color);
+    text-align: center;
+}
+
+.newsGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    text-align: left;
+}
+
+.newsCard {
+    background-color: #ffffff;
+    padding: 2rem;
+    border-radius: var(--border-radius);
+    border: 1px solid #e9ecef;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.newsCard:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+}
+
+.newsCard h4 {
+    margin-top: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+.readMoreLink {
+    color: var(--secondary-color);
+    font-weight: 600;
+    margin-top: 1rem;
+    display: inline-block;
+    transition: color 0.3s ease;
+}
+
+.readMoreLink:hover {
+    color: var(--accent-color);
+}
+
+/* --- NEW: Lessons Learned Section --- */
+.lessonsLearnedSection {
+    padding: 4rem 2rem;
+    background-color: var(--light-bg-color);
+    text-align: center;
+}
+
+.lessonsLearnedContent {
+    max-width: 800px;
+    margin: 0 auto;
+    text-align: left;
+    line-height: 1.8;
+}
 
 /* --- Detailed Inquiry Section Styles --- */
 .inquirySection {
@@ -273,6 +335,13 @@
 }
 
 /* --- Responsive Design --- */
+@media (max-width: 992px) {
+    .newsGrid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+
 @media (max-width: 768px) {
     .header {
         flex-direction: column;
@@ -301,11 +370,18 @@
         font-size: 1.1rem;
     }
 
-    .inquirySection, .servicesSection {
+    .inquirySection, 
+    .servicesSection,
+    .newsSection,
+    .lessonsLearnedSection {
         padding: 3rem 1rem;
     }
 
     .formGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .newsGrid {
         grid-template-columns: 1fr;
     }
 }
