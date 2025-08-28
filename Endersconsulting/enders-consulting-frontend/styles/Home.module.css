@@ -107,8 +107,7 @@
 /* --- Security in the News Section --- */
 .newsSection {
     padding: 4rem 2rem;
-    background-color: var(--bg-color);
-    text-align: center;
+    background-color: var(--light-bg-color);
 }
 
 .newsGrid {
@@ -156,7 +155,7 @@
 /* --- Services Section Styles --- */
 .servicesSection {
     padding: 4rem 2rem;
-    background-color: var(--light-bg-color);
+    background-color: #ffffff;
 }
 
 .servicesGrid {
@@ -211,10 +210,136 @@
     color: var(--dark-text-color);
 }
 
+/* --- REVISED: AI Agency Section --- */
+.aiAgencySection {
+    padding: 4rem 2rem;
+    background-color: var(--light-bg-color);
+}
+
+.aiAgencyHeader {
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto 3rem auto;
+}
+
+.aiAgencySubtitle {
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: var(--secondary-color);
+    margin-top: -1.5rem;
+    margin-bottom: 1rem;
+}
+
+.aiAgencyIntro {
+    font-size: 1.1rem;
+    line-height: 1.7;
+    color: var(--dark-text-color);
+}
+
+.aiGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.aiCard {
+    background-color: #ffffff;
+    padding: 2rem;
+    border-radius: var(--border-radius);
+    border: 1px solid #e9ecef;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+}
+
+.aiCard h5 {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    margin-top: 0;
+    margin-bottom: 1rem;
+}
+
+.aiCard p {
+    line-height: 1.7;
+    color: var(--dark-text-color);
+}
+
+.aiCard ul {
+    list-style: none;
+    padding-left: 0;
+    margin-top: 1rem;
+}
+
+.aiCard li {
+    position: relative;
+    padding-left: 1.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.aiCard li span {
+    position: absolute;
+    left: 0;
+    font-weight: 700;
+    color: var(--error-color);
+}
+
+.aiCard li:first-child span {
+    color: var(--success-color);
+}
+
+.aiCardHighlight {
+    background-color: var(--primary-color);
+    color: var(--text-color);
+}
+
+.aiCardHighlight h5 {
+    color: var(--accent-color);
+}
+
+.aiCardHighlight p, .aiCardHighlight strong {
+    color: var(--text-color);
+}
+
+.aiFact {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: var(--border-radius);
+    font-weight: 500;
+}
+
+.aiCardFullWidth {
+    grid-column: 1 / -1; /* Span all columns */
+}
+
+.featureGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+}
+
+.aiBottomLine {
+    max-width: 800px;
+    margin: 3rem auto 0 auto;
+    text-align: center;
+    padding: 2rem;
+    background-color: #ffffff;
+    border-radius: var(--border-radius);
+    border: 1px solid #e9ecef;
+}
+
+.aiBottomLine h5 {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+    margin-top: 0;
+}
+
+
 /* --- Detailed Inquiry Section Styles --- */
 .inquirySection {
     padding: 4rem 2rem;
-    background-color: var(--bg-color);
+    background-color: #ffffff; /* Ensure clean separation */
 }
 
 .sectionHeader {
@@ -325,6 +450,12 @@
     .newsGrid {
         grid-template-columns: repeat(2, 1fr);
     }
+    .aiGrid {
+        grid-template-columns: 1fr 1fr;
+    }
+    .aiCardFullWidth {
+        grid-column: 1 / -1;
+    }
 }
 
 
@@ -358,7 +489,8 @@
 
     .inquirySection, 
     .servicesSection,
-    .newsSection {
+    .newsSection,
+    .aiAgencySection { /* Added for responsive padding */
         padding: 3rem 1rem;
     }
 
@@ -366,7 +498,9 @@
         grid-template-columns: 1fr;
     }
 
-    .newsGrid {
+    .newsGrid,
+    .aiGrid,
+    .featureGrid {
         grid-template-columns: 1fr;
     }
 }
