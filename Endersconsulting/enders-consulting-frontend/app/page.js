@@ -159,71 +159,66 @@ export default function Home() {
         {/* ==================== NEW SECTION STARTS HERE ================== */}
         {/* =============================================================== */}
         <section className={styles.aiAgencySection}>
-          <div className={styles.aiAgencyContent}>
+          <div className={styles.aiAgencyHeader}>
             <h3 className={styles.sectionTitle}>From our AI Agency Team</h3>
-            
-            <h4 className={styles.aiAgencySubtitle}>Never Miss Another Customer Again: The AI Voice & Chat Agent Solution</h4>
-            
-            <div className={styles.aiAgencyBlock}>
+            <h4 className={styles.aiAgencySubtitle}>Never Miss a Customer Again: The AI Voice & Chat Agent Solution</h4>
+            <p className={styles.aiAgencyIntro}>Every day, businesses lose money on missed calls, after-hours inquiries, and delayed responses. Our AI Agents transform this vulnerability into your greatest competitive advantage.</p>
+          </div>
+          
+          <div className={styles.aiGrid}>
+            {/* Box 1: The Problem */}
+            <div className={`${styles.aiCard} ${styles.aiCardHighlight}`}>
               <h5>The Hidden Cost of Missed Opportunities</h5>
-              <p>Every day, your business loses money while you sleep. Customer inquiries pour in at 2 AM, potential clients call during lunch breaks, and prospects reach out over weekends—only to be met with silence. These missed touchpoints don't just create poor customer experiences; they hemorrhage revenue.</p>
-              <p><strong>The stark reality:</strong> Just one missed high-value customer inquiry can cost more than an entire year's investment in AI automation.</p>
-            </div>
-
-            <div className={styles.aiAgencyBlock}>
-              <h5>The 24/7/365 Solution That Pays for Itself</h5>
-              <p>Our AI Voice & Chat Agent transforms your customer engagement from a liability into your greatest competitive advantage:</p>
-              <div className={styles.featureGrid}>
-                <div>
-                  <h6>Always-On Customer Engagement</h6>
-                  <ul>
-                    <li>No downtime: While your competitors sleep, your AI agent closes deals</li>
-                    <li>Instant response: Every inquiry answered in seconds, not hours or days</li>
-                    <li>Perfect consistency: Professional, knowledgeable responses every single time</li>
-                  </ul>
-                </div>
-                <div>
-                  <h6>Immediate ROI Through Revenue Protection</h6>
-                  <ul>
-                    <li>Zero missed opportunities: Capture every lead, even at 3 AM on holidays</li>
-                    <li>Qualified lead generation: Pre-screen and route high-value prospects automatically</li>
-                    <li>Customer retention: Resolve issues instantly before they escalate to cancellations</li>
-                  </ul>
-                </div>
+              <p>Customer inquiries pour in 24/7. When they're met with silence, it doesn't just create a poor experience—it hemorrhages revenue.</p>
+              <div className={styles.aiFact}>
+                <strong>The stark reality:</strong> Just one missed high-value inquiry can cost more than an entire year of AI automation.
               </div>
             </div>
 
-            <div className={styles.aiAgencyBlock}>
-              <h5>The Economics Are Undeniable</h5>
-              <p>Unlike human staff, your AI agent requires:</p>
-              <ul className={styles.economicsList}>
-                <li><span>❌</span> No salary or benefits</li>
-                <li><span>❌</span> No vacation time or sick days</li>
+            {/* Box 2: The Solution */}
+            <div className={styles.aiCard}>
+              <h5>The 24/7/365 Solution</h5>
+              <p>Our AI Voice & Chat Agents work tirelessly to ensure no customer is ever ignored. They provide:</p>
+              <ul>
+                <li><span>✅</span> Instant, professional responses, day or night</li>
+                <li><span>✅</span> Zero missed opportunities, even on holidays</li>
+                <li><span>✅</span> Seamless lead capture and qualification</li>
+              </ul>
+            </div>
+
+            {/* Box 3: The Economics */}
+            <div className={styles.aiCard}>
+              <h5>The Undeniable Economics</h5>
+              <p>Transform customer service from a cost center into a profit engine. Your AI agent requires:</p>
+              <ul>
+                <li><span>❌</span> No salary, benefits, or sick days</li>
                 <li><span>❌</span> No training costs or turnover</li>
                 <li><span>❌</span> No breaks or shift changes</li>
-                <li><span>✅</span> Just one recovered deal breaks even on your entire investment</li>
               </ul>
             </div>
 
-            <div className={styles.aiAgencyBlock}>
-              <h5>From Cost Center to Profit Engine</h5>
-              <p>Transform customer service from an expense into a revenue-generating machine. Your AI agent doesn't just answer questions—it:</p>
-              <ul>
-                <li>Captures leads when your sales team is unavailable</li>
-                <li>Schedules appointments automatically</li>
-                <li>Provides instant quotes and product information</li>
-                <li>Processes orders around the clock</li>
-                <li>Answers key questions from your Knowledge Base and FAQ</li>
-                <li>Escalates urgent issues to the right team member immediately</li>
-              </ul>
+            {/* Box 4: The Features */}
+            <div className={`${styles.aiCard} ${styles.aiCardFullWidth}`}>
+              <h5>From Answering Questions to Driving Revenue</h5>
+              <p>Our AI agents do more than just talk. They are fully integrated into your workflow to:</p>
+              <div className={styles.featureGrid}>
+                <ul>
+                  <li>Capture leads when your sales team is unavailable</li>
+                  <li>Schedule appointments automatically</li>
+                  <li>Provide instant quotes and product information</li>
+                </ul>
+                <ul>
+                  <li>Process orders around the clock</li>
+                  <li>Answer questions from your knowledge base</li>
+                  <li>Escalate urgent issues to the right team member</li>
+                </ul>
+              </div>
             </div>
+          </div>
 
-            <div className={styles.aiAgencyBlock}>
-              <h5>The Bottom Line</h5>
-              <p>Every hour your business operates without AI voice and chat agents, you're voluntarily giving competitors access to your potential customers. In today's always-connected economy, availability isn't just a convenience—it's a competitive necessity.</p>
-              <p><strong>Your investment pays for itself the moment you capture that first after-hours lead that would have otherwise walked away.</strong></p>
-              <p>Ready to stop losing customers to missed opportunities? Let's discuss how AI agents can transform your business operations and protect your revenue 24/7.</p>
-            </div>
+          <div className={styles.aiBottomLine}>
+            <h5>The Bottom Line</h5>
+            <p>Every hour you operate without an AI agent is an hour you're giving customers to your competitors. In today's economy, 24/7 availability isn't a luxury—it's a necessity. Your investment pays for itself the moment you capture that first after-hours lead that would have otherwise been lost forever.</p>
           </div>
         </section>
         {/* =============================================================== */}
