@@ -26,7 +26,7 @@ from enhanced_search_collector import WebinarSearchCollector
 app = Flask(__name__)
 
 # Set a secret key for sessions (change this to a random secret key in production)
-app.secret_key = os.environ.get('SECRET_KEY', '+K2.$aDy@U678U6aABR%],lAfCrfCo*(Z\SpOW20Ab?NsQ2i"4eX,tcW6nXcC,F|iC&?g{+?0q_;T_\WW[k-}dARu8,x2{g9b?')
+app.secret_key = os.environ.get('SECRET_KEY', '+K2.$aDy@U678U6aABR%]')
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
