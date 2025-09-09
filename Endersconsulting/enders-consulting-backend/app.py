@@ -159,7 +159,7 @@ def health_check():
 
 # --- Webinar Discovery Tool Routes ---
 
-@app.route('/webinar-tool')
+@app.route('/api/webinar-tool')
 def webinar_tool_login():
     """Login page for webinar discovery tool"""
     if is_authenticated():
