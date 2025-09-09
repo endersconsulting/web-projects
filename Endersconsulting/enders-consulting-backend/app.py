@@ -404,6 +404,7 @@ def get_collection_status():
         LIMIT 1
     """)
     last_collection = cursor.fetchone()
+
     
     # Get API status
     api_status = {
@@ -415,15 +416,15 @@ def get_collection_status():
     conn.close()
     
     return jsonify({
-        'status': 'success',
-        'data': {
-            'summary': {
-                'last_collection': last_collection[8] if last_collection else None,  # created_at field
-                'last_collection_stats': json.loads(last_collection[7]) if last_collection and last_collection[7] else None
-            },
-            'api_status': api_status
-        }
-    })
+    'status': 'success',
+    'data': {
+        'summary': {
+            'last_collection': last_collection[-1] if last_collection else None,  # ← CHANGED
+            'last_collection_stats': json.loads(last_collection[-2]) if last_collection and last_collection[-2] else None  # ← CHANGED
+        },
+        'api_status': api_status
+    }
+})
 
 # --- HTML Templates (same as before) ---
 
