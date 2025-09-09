@@ -1,6 +1,6 @@
 # app.py
-# Enhanced Backend API for the Enders Consulting application with Webinar Discovery Tool
-# This Flask app handles API requests from the Next.js frontend and includes password-protected webinar discovery
+# Enhanced Backend API for the Enders Consulting application with REAL Webinar Discovery
+# This Flask app includes actual webinar search functionality using multiple APIs
 
 from flask import Flask, request, jsonify, session, render_template_string
 from flask_cors import CORS
@@ -10,6 +10,9 @@ from datetime import datetime, timedelta
 import sqlite3
 import json
 import logging
+
+# Import the real search collector
+from enhanced_search_collector import WebinarSearchCollector
 
 # Initialize the Flask application
 app = Flask(__name__)
@@ -22,8 +25,6 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # --- CORS Configuration ---
-# This is crucial for allowing the Next.js frontend to make requests to this Flask backend.
-# Updated to allow both localhost (development) and production domain
 CORS(app, resources={
     r"/api/*": {
         "origins": [
@@ -35,9 +36,11 @@ CORS(app, resources={
 }, supports_credentials=True)
 
 # --- Password Configuration ---
-# Change these credentials for production use
 WEBINAR_TOOL_USERNAME = os.environ.get('WEBINAR_USERNAME', 'renders')
-WEBINAR_TOOL_PASSWORD = os.environ.get('WEBINAR_PASSWORD', 'Navigator2-Utmost-Lumpiness-Hatchet-Shrill')  # Change this!
+WEBINAR_TOOL_PASSWORD = os.environ.get('WEBINAR_PASSWORD', 'Navigator2-Utmost-Lumpiness-Hatchet-Shrill')
+
+# Initialize the search collector
+search_collector = WebinarSearchCollector()
 
 # --- Database Setup ---
 def init_webinar_db():
@@ -85,6 +88,7 @@ def init_webinar_db():
             events_updated INTEGER DEFAULT 0,
             execution_time REAL DEFAULT 0,
             status TEXT DEFAULT 'completed',
+            search_stats TEXT,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
     ''')
@@ -155,7 +159,7 @@ def health_check():
 
 # --- Webinar Discovery Tool Routes ---
 
-@app.route('/api/webinar-tool')
+@app.route('/webinar-tool')
 def webinar_tool_login():
     """Login page for webinar discovery tool"""
     if is_authenticated():
@@ -271,98 +275,50 @@ def get_webinar_events():
 
 @app.route('/api/webinars/collect/run', methods=['POST'])
 def run_webinar_collection():
-    """Run webinar collection (simulated)"""
+    """Run REAL webinar collection using multiple search strategies"""
     if not is_authenticated():
         return jsonify({'error': 'Authentication required'}), 401
     
-    logger.info("Starting manual webinar collection...")
+    logger.info("Starting REAL webinar collection with multiple APIs...")
     
-    # Simulate collection process
-    import time
-    start_time = time.time()
-    
-    # Add some sample data if database is empty
-    conn = sqlite3.connect('webinar_discovery.db')
-    cursor = conn.cursor()
-    
-    # Check if we have any events
-    cursor.execute("SELECT COUNT(*) as count FROM events")
-    event_count = cursor.fetchone()[0]
-    
-    events_new = 0
-    events_updated = 0
-    
-    if event_count == 0:
-        # Add sample events
-        sample_events = [
-            {
-                'title': 'Cybersecurity Best Practices 2025',
-                'description': 'Learn about the latest cybersecurity threats and how to protect your organization. This comprehensive webinar covers threat detection, incident response, and security frameworks.',
-                'event_date': '2025-09-20 14:00:00',
-                'registration_url': 'https://example.com/register/cybersecurity',
-                'platform': 'ON24',
-                'topic_category': 'cybersecurity',
-                'is_free': 1
-            },
-            {
-                'title': 'Digital Marketing Strategies for 2025',
-                'description': 'Discover new digital marketing strategies and trends that will dominate 2025. Learn about AI-powered marketing, personalization, and customer engagement.',
-                'event_date': '2025-10-05 15:00:00',
-                'registration_url': 'https://example.com/register/marketing',
-                'platform': 'LinkedIn',
-                'topic_category': 'marketing',
-                'is_free': 0
-            },
-            {
-                'title': 'AI in Marketing: Future Trends',
-                'description': 'Join us for an exclusive webinar on AI trends in marketing. Explore how artificial intelligence is transforming customer experiences and marketing automation.',
-                'event_date': '2025-10-15 16:00:00',
-                'registration_url': 'https://example.com/register/ai-marketing',
-                'platform': 'BrightTalk',
-                'topic_category': 'artificial-intelligence',
-                'is_free': 0
-            }
-        ]
+    try:
+        # Use the real search collector
+        result = search_collector.collect_webinars()
         
-        for event in sample_events:
-            cursor.execute("""
-                INSERT INTO events (title, description, event_date, registration_url, platform, topic_category, is_free)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-            """, (
-                event['title'], event['description'], event['event_date'],
-                event['registration_url'], event['platform'], event['topic_category'], event['is_free']
-            ))
-            events_new += 1
-            
-            # Add sample speakers
-            event_id = cursor.lastrowid
-            cursor.execute("""
-                INSERT INTO speakers (event_id, name, company)
-                VALUES (?, ?, ?)
-            """, (event_id, 'Expert Speaker', 'Example Corp'))
-    
-    execution_time = time.time() - start_time
-    
-    # Log the collection
-    cursor.execute("""
-        INSERT INTO collection_logs (collection_type, events_found, events_new, events_updated, execution_time)
-        VALUES (?, ?, ?, ?, ?)
-    """, ('manual', events_new + events_updated, events_new, events_updated, execution_time))
-    
-    conn.commit()
-    conn.close()
-    
-    logger.info(f"Collection completed: {events_new} new, {events_updated} updated")
-    
-    return jsonify({
-        'status': 'success',
-        'data': {
-            'events_found': events_new + events_updated,
-            'events_new': events_new,
-            'events_updated': events_updated,
-            'execution_time': execution_time
-        }
-    })
+        # Log the collection
+        conn = sqlite3.connect('webinar_discovery.db')
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            INSERT INTO collection_logs (
+                collection_type, events_found, events_new, events_updated, 
+                execution_time, search_stats
+            ) VALUES (?, ?, ?, ?, ?, ?)
+        """, (
+            'real_search', 
+            result['events_found'], 
+            result['events_new'], 
+            result['events_updated'],
+            result['execution_time'],
+            json.dumps(result['search_stats'])
+        ))
+        
+        conn.commit()
+        conn.close()
+        
+        logger.info(f"Real collection completed: {result['events_new']} new, {result['events_updated']} updated")
+        
+        return jsonify({
+            'status': 'success',
+            'data': result
+        })
+        
+    except Exception as e:
+        logger.error(f"Collection error: {e}")
+        return jsonify({
+            'status': 'error',
+            'message': f'Collection failed: {str(e)}'
+        }), 500
 
 @app.route('/api/webinars/analytics/summary', methods=['GET'])
 def get_webinar_analytics():
@@ -383,6 +339,24 @@ def get_webinar_analytics():
     cursor.execute("SELECT COUNT(*) as free FROM events WHERE is_free = 1")
     free_events = cursor.fetchone()[0]
     
+    # Get platform breakdown
+    cursor.execute("""
+        SELECT platform, COUNT(*) as count 
+        FROM events 
+        GROUP BY platform 
+        ORDER BY count DESC
+    """)
+    platform_stats = [{'platform': row[0], 'count': row[1]} for row in cursor.fetchall()]
+    
+    # Get topic breakdown
+    cursor.execute("""
+        SELECT topic_category, COUNT(*) as count 
+        FROM events 
+        GROUP BY topic_category 
+        ORDER BY count DESC
+    """)
+    topic_stats = [{'topic': row[0], 'count': row[1]} for row in cursor.fetchall()]
+    
     conn.close()
     
     return jsonify({
@@ -392,7 +366,9 @@ def get_webinar_analytics():
                 'total_events': total_events,
                 'upcoming_events': upcoming_events,
                 'free_events': free_events
-            }
+            },
+            'platform_breakdown': platform_stats,
+            'topic_breakdown': topic_stats
         }
     })
 
@@ -413,18 +389,27 @@ def get_collection_status():
     """)
     last_collection = cursor.fetchone()
     
+    # Get API status
+    api_status = {
+        'google_api': bool(search_collector.google_api_key and search_collector.google_cse_id),
+        'serpapi': bool(search_collector.serpapi_key),
+        'direct_scraping': True
+    }
+    
     conn.close()
     
     return jsonify({
         'status': 'success',
         'data': {
             'summary': {
-                'last_collection': last_collection[7] if last_collection else None  # created_at field
-            }
+                'last_collection': last_collection[8] if last_collection else None,  # created_at field
+                'last_collection_stats': json.loads(last_collection[7]) if last_collection and last_collection[7] else None
+            },
+            'api_status': api_status
         }
     })
 
-# --- HTML Templates ---
+# --- HTML Templates (same as before) ---
 
 LOGIN_HTML = '''
 <!DOCTYPE html>
@@ -542,13 +527,56 @@ LOGIN_HTML = '''
         .back-link a:hover {
             text-decoration: underline;
         }
+        
+        .api-status {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+            font-size: 0.85rem;
+        }
+        
+        .api-status h4 {
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+        
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.25rem;
+        }
+        
+        .status-enabled {
+            color: #28a745;
+        }
+        
+        .status-disabled {
+            color: #dc3545;
+        }
     </style>
 </head>
 <body>
     <div class="login-container">
         <div class="login-header">
             <h1>Webinar Discovery Tool</h1>
-            <p>Please enter your credentials to access the tool</p>
+            <p>Real-time webinar search with multiple APIs</p>
+        </div>
+        
+        <div class="api-status">
+            <h4>Search Capabilities</h4>
+            <div class="status-item">
+                <span>Google Custom Search:</span>
+                <span id="google-status" class="status-disabled">Not Configured</span>
+            </div>
+            <div class="status-item">
+                <span>SerpAPI:</span>
+                <span id="serp-status" class="status-disabled">Not Configured</span>
+            </div>
+            <div class="status-item">
+                <span>Direct Platform Scraping:</span>
+                <span class="status-enabled">Available</span>
+            </div>
         </div>
         
         <div id="error-message" style="display: none;" class="error"></div>
@@ -573,6 +601,12 @@ LOGIN_HTML = '''
     </div>
     
     <script>
+        // Check API status on load
+        document.addEventListener('DOMContentLoaded', function() {
+            // This would be populated by the backend if needed
+            // For now, we'll assume basic configuration
+        });
+        
         document.getElementById('login-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             
@@ -877,6 +911,14 @@ WEBINAR_TOOL_HTML = '''
             margin-bottom: 1rem;
         }
 
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+        }
+
         .pagination {
             display: flex;
             justify-content: center;
@@ -896,6 +938,38 @@ WEBINAR_TOOL_HTML = '''
         .pagination button.active {
             background: #667eea;
             color: white;
+        }
+
+        .api-status {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .api-status h4 {
+            margin-bottom: 0.5rem;
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 0.5rem;
+        }
+
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .status-enabled {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .status-disabled {
+            color: #dc3545;
         }
 
         @media (max-width: 768px) {
@@ -919,11 +993,29 @@ WEBINAR_TOOL_HTML = '''
         <div class="header">
             <button class="logout-btn" onclick="logout()">Logout</button>
             <h1>Webinar Discovery Tool</h1>
-            <p>Discover upcoming webinars from multiple platforms with enhanced search capabilities</p>
+            <p>Real-time webinar discovery with multiple search APIs and platform scraping</p>
         </div>
 
         <div class="controls">
             <h2>Search & Collection Controls</h2>
+            
+            <div id="api-status" class="api-status">
+                <h4>API Status</h4>
+                <div class="status-grid">
+                    <div class="status-item">
+                        <span>Google Custom Search:</span>
+                        <span id="google-status" class="status-disabled">Checking...</span>
+                    </div>
+                    <div class="status-item">
+                        <span>SerpAPI:</span>
+                        <span id="serp-status" class="status-disabled">Checking...</span>
+                    </div>
+                    <div class="status-item">
+                        <span>Direct Scraping:</span>
+                        <span class="status-enabled">Available</span>
+                    </div>
+                </div>
+            </div>
             
             <div class="control-group">
                 <div class="control-item">
@@ -940,6 +1032,8 @@ WEBINAR_TOOL_HTML = '''
                         <option value="data-science">Data Science</option>
                         <option value="cloud-computing">Cloud Computing</option>
                         <option value="leadership">Leadership</option>
+                        <option value="healthcare">Healthcare</option>
+                        <option value="finance">Finance</option>
                     </select>
                 </div>
                 <div class="control-item">
@@ -951,6 +1045,7 @@ WEBINAR_TOOL_HTML = '''
                         <option value="LinkedIn">LinkedIn</option>
                         <option value="Zoom">Zoom</option>
                         <option value="GoToWebinar">GoToWebinar</option>
+                        <option value="Eventbrite">Eventbrite</option>
                     </select>
                 </div>
                 <div class="control-item">
@@ -968,7 +1063,7 @@ WEBINAR_TOOL_HTML = '''
                     <button onclick="searchEvents()">Search Events</button>
                 </div>
                 <div class="control-item">
-                    <button onclick="runCollection()" id="collectBtn">Run Collection</button>
+                    <button onclick="runCollection()" id="collectBtn">🔍 Run Real Collection</button>
                 </div>
                 <div class="control-item">
                     <button onclick="loadStats()">Refresh Stats</button>
@@ -1000,10 +1095,10 @@ WEBINAR_TOOL_HTML = '''
         <div class="events-container">
             <div class="events-header">
                 <h2>Discovered Webinars</h2>
-                <p>Click "Search Events" to load webinars or "Run Collection" to discover new ones</p>
+                <p>Click "Run Real Collection" to discover current webinars from multiple sources</p>
             </div>
             <div id="eventsContainer">
-                <div class="loading">Click "Search Events" to load webinars</div>
+                <div class="loading">Click "Run Real Collection" to discover live webinars</div>
             </div>
             <div id="paginationContainer"></div>
         </div>
@@ -1013,9 +1108,10 @@ WEBINAR_TOOL_HTML = '''
         let currentPage = 1;
         const perPage = 10;
 
-        // Load initial stats
+        // Load initial stats and API status
         document.addEventListener('DOMContentLoaded', function() {
             loadStats();
+            checkApiStatus();
         });
 
         async function logout() {
@@ -1028,6 +1124,27 @@ WEBINAR_TOOL_HTML = '''
             } catch (error) {
                 console.error('Logout error:', error);
                 window.location.reload();
+            }
+        }
+
+        async function checkApiStatus() {
+            try {
+                const response = await fetch('/api/webinars/collect/status', {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                
+                if (data.status === 'success' && data.data.api_status) {
+                    const status = data.data.api_status;
+                    
+                    document.getElementById('google-status').textContent = status.google_api ? 'Configured' : 'Not Configured';
+                    document.getElementById('google-status').className = status.google_api ? 'status-enabled' : 'status-disabled';
+                    
+                    document.getElementById('serp-status').textContent = status.serpapi ? 'Configured' : 'Not Configured';
+                    document.getElementById('serp-status').className = status.serpapi ? 'status-enabled' : 'status-disabled';
+                }
+            } catch (error) {
+                console.error('Error checking API status:', error);
             }
         }
 
@@ -1099,10 +1216,10 @@ WEBINAR_TOOL_HTML = '''
         async function runCollection() {
             const collectBtn = document.getElementById('collectBtn');
             collectBtn.disabled = true;
-            collectBtn.textContent = 'Collecting...';
+            collectBtn.textContent = '🔍 Collecting Real Webinars...';
 
             try {
-                showMessage('Starting webinar collection...', 'info');
+                showMessage('Starting real webinar collection from multiple sources...', 'info');
                 
                 const response = await fetch('/api/webinars/collect/run', {
                     method: 'POST',
@@ -1112,9 +1229,13 @@ WEBINAR_TOOL_HTML = '''
 
                 if (data.status === 'success') {
                     const result = data.data;
+                    const stats = result.search_stats || {};
+                    
                     showMessage(
-                        `Collection completed! Found ${result.events_found} events, ` +
+                        `🎉 Real collection completed! Found ${result.events_found} events, ` +
                         `${result.events_new} new, ${result.events_updated} updated. ` +
+                        `Sources: Google (${stats.google_results || 0}), SerpAPI (${stats.serpapi_results || 0}), ` +
+                        `Direct scraping (${stats.direct_scraping || 0}). ` +
                         `Execution time: ${result.execution_time.toFixed(2)}s`,
                         'success'
                     );
@@ -1123,13 +1244,13 @@ WEBINAR_TOOL_HTML = '''
                     loadStats();
                     searchEvents();
                 } else {
-                    showError('Collection failed');
+                    showError('Collection failed: ' + (data.message || 'Unknown error'));
                 }
             } catch (error) {
                 showError('Error running collection: ' + error.message);
             } finally {
                 collectBtn.disabled = false;
-                collectBtn.textContent = 'Run Collection';
+                collectBtn.textContent = '🔍 Run Real Collection';
             }
         }
 
@@ -1137,7 +1258,7 @@ WEBINAR_TOOL_HTML = '''
             const container = document.getElementById('eventsContainer');
             
             if (events.length === 0) {
-                container.innerHTML = '<div class="loading">No events found. Try running a collection first.</div>';
+                container.innerHTML = '<div class="loading">No events found. Try running a real collection first.</div>';
                 return;
             }
 
@@ -1240,3 +1361,4 @@ WEBINAR_TOOL_HTML = '''
 if __name__ == '__main__':
     # The API will run on port 5001 to avoid conflict with Next.js (port 3000)
     app.run(host='0.0.0.0', port=5001, debug=True)
+
