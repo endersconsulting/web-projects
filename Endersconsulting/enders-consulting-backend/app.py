@@ -11,6 +11,14 @@ import sqlite3
 import json
 import logging
 
+# Debug
+# Add this near the top of app.py after imports
+import os
+print("=== Environment Variables Debug ===")
+print(f"GOOGLE_API_KEY: {os.environ.get('GOOGLE_API_KEY', 'NOT SET')}")
+print(f"GOOGLE_CSE_ID: {os.environ.get('GOOGLE_CSE_ID', 'NOT SET')}")
+print("===================================")
+
 # Import the real search collector
 from enhanced_search_collector import WebinarSearchCollector
 
