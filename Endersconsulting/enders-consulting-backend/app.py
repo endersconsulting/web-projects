@@ -26,7 +26,7 @@ from enhanced_search_collector import WebinarSearchCollector
 app = Flask(__name__)
 
 # Set a secret key for sessions (change this to a random secret key in production)
-app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-change-this-in-production')
+app.secret_key = os.environ.get('SECRET_KEY', '+K2.$aDy@U678U6aABR%],lAfCrfCo*(Z\SpOW20Ab?NsQ2i"4eX,tcW6nXcC,F|iC&?g{+?0q_;T_\WW[k-}dARu8,x2{g9b?')
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -49,6 +49,14 @@ WEBINAR_TOOL_PASSWORD = os.environ.get('WEBINAR_PASSWORD', 'Navigator2-Utmost-Lu
 
 # Initialize the search collector
 search_collector = WebinarSearchCollector()
+
+# debug
+# Add this debug code after: search_collector = WebinarSearchCollector()
+print("=== Search Collector Debug ===")
+print(f"Collector Google API Key: {search_collector.google_api_key is not None}")
+print(f"Collector Google CSE ID: {search_collector.google_cse_id is not None}")
+print(f"Collector SerpAPI Key: {search_collector.serpapi_key is not None}")
+print("==============================")
 
 # --- Database Setup ---
 def init_webinar_db():
