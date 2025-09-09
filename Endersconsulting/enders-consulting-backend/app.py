@@ -404,7 +404,6 @@ def get_collection_status():
         LIMIT 1
     """)
     last_collection = cursor.fetchone()
-
     
     # Get API status
     api_status = {
@@ -415,16 +414,34 @@ def get_collection_status():
     
     conn.close()
     
+    # Safe JSON parsing
+    last_stats = None
+    if last_collection and len(last_collection) > 6 and last_collection[-2]:
+        try:
+            last_stats = json.loads(last_collection[-2])
+        except (json.JSONDecodeError, TypeError):
+            last_stats = None
+    
     return jsonify({
-    'status': 'success',
-    'data': {
-        'summary': {
-            'last_collection': last_collection[-1] if last_collection else None,  # ← CHANGED
-            'last_collection_stats': json.loads(last_collection[-2]) if last_collection and last_collection[-2] else None  # ← CHANGED
-        },
-        'api_status': api_status
-    }
-})
+        'status': 'success',
+        'data': {
+            'summary': {
+                'last_collection': last_collection[-1] if last_collection else None,
+                'last_collection_stats': last_stats
+            },
+            'api_status': api_status
+        }
+    })
+
+def _safe_json_parse(json_string):
+    """Safely parse JSON string, return None if invalid"""
+    if not json_string:
+        return None
+    try:
+        return json.loads(json_string)
+    except (json.JSONDecodeError, TypeError):
+        return None
+
 
 # --- HTML Templates (same as before) ---
 
