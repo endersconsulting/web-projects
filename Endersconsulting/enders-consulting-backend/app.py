@@ -27,6 +27,8 @@ except ImportError:
 # Initialize the Flask application
 app = Flask(__name__)
 
+add_news_feed_routes(app)
+
 # Set a secret key for sessions (change this to a random secret key in production)
 app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-change-this-in-production')
 
