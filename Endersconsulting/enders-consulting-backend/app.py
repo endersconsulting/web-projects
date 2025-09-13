@@ -2,6 +2,8 @@
 # Enhanced Backend API with Advanced Contact Discovery for Webinar Follow-up
 # This Flask app includes advanced contact discovery to find decision makers and organizers
 
+from news_feed_backend import add_news_feed_routes
+
 from flask import Flask, request, jsonify, session, render_template_string
 from flask_cors import CORS
 import hashlib
