@@ -834,3 +834,4 @@ class EnhancedWebinarScraper:
         title = ' '.join(title.split())
         
         return title[:200]  # Limit length
+

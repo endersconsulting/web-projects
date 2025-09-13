@@ -1,6 +1,6 @@
 # app.py
-# Enhanced Backend API for the Enders Consulting application with ENHANCED Webinar Discovery
-# This Flask app includes enhanced webinar scraping that extracts individual events with dates and contact info
+# Enhanced Backend API with Advanced Contact Discovery for Webinar Follow-up
+# This Flask app includes advanced contact discovery to find decision makers and organizers
 
 from flask import Flask, request, jsonify, session, render_template_string
 from flask_cors import CORS
@@ -11,8 +11,16 @@ import sqlite3
 import json
 import logging
 
-# Import the enhanced search collector
-from enhanced_webinar_scraper import EnhancedWebinarScraper
+# Import the enhanced search collector and contact discovery
+# Note: These imports will work after you copy the files to your backend directory
+try:
+    from enhanced_webinar_scraper import EnhancedWebinarScraper
+    from advanced_contact_discovery import AdvancedContactDiscovery
+    CONTACT_DISCOVERY_AVAILABLE = True
+except ImportError:
+    # Fallback if contact discovery files aren't available yet
+    CONTACT_DISCOVERY_AVAILABLE = False
+    print("Contact discovery modules not found. Basic functionality will be available.")
 
 # Initialize the Flask application
 app = Flask(__name__)
@@ -39,25 +47,24 @@ CORS(app, resources={
 WEBINAR_TOOL_USERNAME = os.environ.get('WEBINAR_USERNAME', 'admin')
 WEBINAR_TOOL_PASSWORD = os.environ.get('WEBINAR_PASSWORD', 'secure123')  # Change this!
 
-# Initialize the enhanced search collector
-enhanced_scraper = EnhancedWebinarScraper()
+# Initialize the enhanced search collector and contact discovery (if available)
+if CONTACT_DISCOVERY_AVAILABLE:
+    enhanced_scraper = EnhancedWebinarScraper()
+    contact_discovery = AdvancedContactDiscovery()
+else:
+    enhanced_scraper = None
+    contact_discovery = None
 
 # Debug environment variables
 print("=== Environment Variables Debug ===")
 print(f"GOOGLE_API_KEY: {os.environ.get('GOOGLE_API_KEY', 'NOT SET')}")
 print(f"GOOGLE_CSE_ID: {os.environ.get('GOOGLE_CSE_ID', 'NOT SET')}")
+print(f"Contact Discovery Available: {CONTACT_DISCOVERY_AVAILABLE}")
 print("===================================")
-
-# Debug search collector
-print("=== Enhanced Scraper Debug ===")
-print(f"Scraper Google API Key: {enhanced_scraper.google_api_key is not None}")
-print(f"Scraper Google CSE ID: {enhanced_scraper.google_cse_id is not None}")
-print(f"Scraper SerpAPI Key: {enhanced_scraper.serpapi_key is not None}")
-print("==============================")
 
 # --- Database Setup ---
 def init_webinar_db():
-    """Initialize the webinar database with enhanced schema"""
+    """Initialize the webinar database with enhanced schema including contact discovery"""
     conn = sqlite3.connect('webinar_discovery.db')
     cursor = conn.cursor()
     
@@ -80,6 +87,37 @@ def init_webinar_db():
             source_page TEXT,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    
+    # Create contact discovery tables
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS event_contacts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            event_id INTEGER,
+            contact_type TEXT,
+            name TEXT,
+            title TEXT,
+            email TEXT,
+            phone TEXT,
+            linkedin_url TEXT,
+            company TEXT,
+            confidence REAL,
+            discovery_method TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (event_id) REFERENCES events (id)
+        )
+    ''')
+    
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS event_organizations (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            event_id INTEGER,
+            organization_name TEXT,
+            confidence_score REAL,
+            discovery_methods TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (event_id) REFERENCES events (id)
         )
     ''')
     
@@ -192,7 +230,7 @@ def health_check():
 def webinar_tool_login():
     """Login page for webinar discovery tool"""
     if is_authenticated():
-        return render_template_string(ENHANCED_WEBINAR_TOOL_HTML)
+        return render_template_string(CONTACT_DISCOVERY_HTML)
     
     return render_template_string(LOGIN_HTML)
 
@@ -223,7 +261,7 @@ def webinar_logout():
 
 @app.route('/api/webinars/events', methods=['GET'])
 def get_webinar_events():
-    """Get webinar events with filtering and enhanced fields"""
+    """Get webinar events with filtering and contact information"""
     if not is_authenticated():
         return jsonify({'error': 'Authentication required'}), 401
     
@@ -235,6 +273,7 @@ def get_webinar_events():
     platform = request.args.get('platform', '')
     is_free = request.args.get('is_free', '')
     has_contact = request.args.get('has_contact', '')
+    has_decision_makers = request.args.get('has_decision_makers', '')
     
     # Build SQL query
     conn = sqlite3.connect('webinar_discovery.db')
@@ -245,44 +284,71 @@ def get_webinar_events():
     params = []
     
     if search:
-        where_conditions.append("(title LIKE ? OR description LIKE ? OR speaker LIKE ? OR organizer LIKE ?)")
+        where_conditions.append("(e.title LIKE ? OR e.description LIKE ? OR e.speaker LIKE ? OR e.organizer LIKE ?)")
         params.extend([f'%{search}%', f'%{search}%', f'%{search}%', f'%{search}%'])
     
     if topic:
-        where_conditions.append("topic_category = ?")
+        where_conditions.append("e.topic_category = ?")
         params.append(topic)
     
     if platform:
-        where_conditions.append("platform = ?")
+        where_conditions.append("e.platform = ?")
         params.append(platform)
     
     if is_free:
-        where_conditions.append("is_free = ?")
+        where_conditions.append("e.is_free = ?")
         params.append(1 if is_free.lower() == 'true' else 0)
     
     if has_contact:
-        where_conditions.append("(contact_email IS NOT NULL AND contact_email != '') OR (contact_phone IS NOT NULL AND contact_phone != '') OR (organizer IS NOT NULL AND organizer != '')")
+        where_conditions.append("(e.contact_email IS NOT NULL AND e.contact_email != '') OR (e.contact_phone IS NOT NULL AND e.contact_phone != '') OR (e.organizer IS NOT NULL AND e.organizer != '')")
+    
+    if has_decision_makers:
+        where_conditions.append("EXISTS (SELECT 1 FROM event_contacts ec WHERE ec.event_id = e.id AND ec.contact_type = 'decision_makers')")
     
     where_clause = " AND ".join(where_conditions) if where_conditions else "1=1"
     
     # Get total count
-    count_query = f"SELECT COUNT(*) as total FROM events WHERE {where_clause}"
+    count_query = f"SELECT COUNT(*) as total FROM events e WHERE {where_clause}"
     cursor.execute(count_query, params)
     total = cursor.fetchone()['total']
     
     # Get events with pagination
     offset = (page - 1) * per_page
     events_query = f"""
-        SELECT * FROM events 
+        SELECT e.*, 
+               eo.organization_name,
+               COUNT(DISTINCT CASE WHEN ec.contact_type = 'decision_makers' THEN ec.id END) as decision_maker_count,
+               COUNT(DISTINCT ec.id) as total_contact_count
+        FROM events e
+        LEFT JOIN event_organizations eo ON e.id = eo.event_id
+        LEFT JOIN event_contacts ec ON e.id = ec.event_id
         WHERE {where_clause}
-        ORDER BY event_date ASC, created_at DESC
+        GROUP BY e.id
+        ORDER BY e.event_date ASC, e.created_at DESC
         LIMIT ? OFFSET ?
     """
     cursor.execute(events_query, params + [per_page, offset])
     events = [dict(row) for row in cursor.fetchall()]
     
-    # Get speakers for each event
+    # Get detailed contacts for each event
     for event in events:
+        # Get decision makers
+        cursor.execute("""
+            SELECT * FROM event_contacts 
+            WHERE event_id = ? AND contact_type = 'decision_makers'
+            ORDER BY confidence DESC
+        """, (event['id'],))
+        event['decision_makers'] = [dict(row) for row in cursor.fetchall()]
+        
+        # Get all contacts
+        cursor.execute("""
+            SELECT * FROM event_contacts 
+            WHERE event_id = ?
+            ORDER BY contact_type, confidence DESC
+        """, (event['id'],))
+        event['all_contacts'] = [dict(row) for row in cursor.fetchall()]
+        
+        # Get speakers
         cursor.execute("SELECT * FROM speakers WHERE event_id = ?", (event['id'],))
         event['speakers'] = [dict(row) for row in cursor.fetchall()]
     
@@ -306,11 +372,236 @@ def get_webinar_events():
         }
     })
 
+# --- Contact Discovery Routes ---
+
+@app.route('/api/webinars/contacts/discover', methods=['POST'])
+def discover_event_contacts():
+    """Discover contacts for a specific event"""
+    if not is_authenticated():
+        return jsonify({'error': 'Authentication required'}), 401
+    
+    if not CONTACT_DISCOVERY_AVAILABLE:
+        return jsonify({'error': 'Contact discovery not available. Please deploy the contact discovery modules.'}), 503
+    
+    data = request.get_json()
+    event_id = data.get('event_id')
+    
+    if not event_id:
+        return jsonify({'error': 'Event ID required'}), 400
+    
+    try:
+        logger.info(f"Starting contact discovery for event {event_id}")
+        result = contact_discovery.discover_webinar_contacts(event_id)
+        
+        return jsonify({
+            'status': 'success',
+            'data': result
+        })
+        
+    except Exception as e:
+        logger.error(f"Contact discovery error for event {event_id}: {e}")
+        return jsonify({
+            'status': 'error',
+            'message': f'Contact discovery failed: {str(e)}'
+        }), 500
+
+@app.route('/api/webinars/contacts/bulk-discover', methods=['POST'])
+def bulk_discover_contacts():
+    """Discover contacts for multiple events"""
+    if not is_authenticated():
+        return jsonify({'error': 'Authentication required'}), 401
+    
+    if not CONTACT_DISCOVERY_AVAILABLE:
+        return jsonify({'error': 'Contact discovery not available. Please deploy the contact discovery modules.'}), 503
+    
+    data = request.get_json()
+    limit = data.get('limit', 10)
+    
+    try:
+        logger.info(f"Starting bulk contact discovery for up to {limit} events")
+        result = contact_discovery.bulk_discover_contacts(limit)
+        
+        return jsonify({
+            'status': 'success',
+            'data': result
+        })
+        
+    except Exception as e:
+        logger.error(f"Bulk contact discovery error: {e}")
+        return jsonify({
+            'status': 'error',
+            'message': f'Bulk contact discovery failed: {str(e)}'
+        }), 500
+
+@app.route('/api/webinars/contacts/analytics', methods=['GET'])
+def get_contact_analytics():
+    """Get analytics about discovered contacts"""
+    if not is_authenticated():
+        return jsonify({'error': 'Authentication required'}), 401
+    
+    conn = sqlite3.connect('webinar_discovery.db')
+    cursor = conn.cursor()
+    
+    # Get contact statistics
+    cursor.execute("SELECT COUNT(DISTINCT event_id) as events_with_contacts FROM event_contacts")
+    events_with_contacts = cursor.fetchone()[0]
+    
+    cursor.execute("SELECT COUNT(*) as total_contacts FROM event_contacts")
+    total_contacts = cursor.fetchone()[0]
+    
+    cursor.execute("SELECT COUNT(*) as decision_makers FROM event_contacts WHERE contact_type = 'decision_makers'")
+    decision_makers = cursor.fetchone()[0]
+    
+    cursor.execute("SELECT COUNT(*) as with_email FROM event_contacts WHERE email IS NOT NULL AND email != ''")
+    contacts_with_email = cursor.fetchone()[0]
+    
+    cursor.execute("SELECT COUNT(*) as with_linkedin FROM event_contacts WHERE linkedin_url IS NOT NULL AND linkedin_url != ''")
+    contacts_with_linkedin = cursor.fetchone()[0]
+    
+    # Get contact types breakdown
+    cursor.execute("""
+        SELECT contact_type, COUNT(*) as count 
+        FROM event_contacts 
+        GROUP BY contact_type 
+        ORDER BY count DESC
+    """)
+    contact_types = [{'type': row[0], 'count': row[1]} for row in cursor.fetchall()]
+    
+    # Get top titles for decision makers
+    cursor.execute("""
+        SELECT title, COUNT(*) as count 
+        FROM event_contacts 
+        WHERE contact_type = 'decision_makers' AND title IS NOT NULL AND title != ''
+        GROUP BY title 
+        ORDER BY count DESC
+        LIMIT 10
+    """)
+    top_titles = [{'title': row[0], 'count': row[1]} for row in cursor.fetchall()]
+    
+    # Get organizations with most contacts
+    cursor.execute("""
+        SELECT company, COUNT(*) as contact_count
+        FROM event_contacts 
+        WHERE company IS NOT NULL AND company != ''
+        GROUP BY company 
+        ORDER BY contact_count DESC
+        LIMIT 10
+    """)
+    top_organizations = [{'organization': row[0], 'contacts': row[1]} for row in cursor.fetchall()]
+    
+    conn.close()
+    
+    return jsonify({
+        'status': 'success',
+        'data': {
+            'summary': {
+                'events_with_contacts': events_with_contacts,
+                'total_contacts': total_contacts,
+                'decision_makers': decision_makers,
+                'contacts_with_email': contacts_with_email,
+                'contacts_with_linkedin': contacts_with_linkedin
+            },
+            'contact_types': contact_types,
+            'top_decision_maker_titles': top_titles,
+            'top_organizations': top_organizations
+        }
+    })
+
+@app.route('/api/webinars/contacts/export', methods=['GET'])
+def export_contacts():
+    """Export contacts for outreach"""
+    if not is_authenticated():
+        return jsonify({'error': 'Authentication required'}), 401
+    
+    contact_type = request.args.get('type', 'decision_makers')
+    format_type = request.args.get('format', 'json')
+    
+    conn = sqlite3.connect('webinar_discovery.db')
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    
+    # Get contacts with event information
+    cursor.execute("""
+        SELECT 
+            ec.*,
+            e.title as event_title,
+            e.event_date,
+            e.platform,
+            e.topic_category,
+            e.registration_url,
+            eo.organization_name
+        FROM event_contacts ec
+        JOIN events e ON ec.event_id = e.id
+        LEFT JOIN event_organizations eo ON ec.event_id = eo.event_id
+        WHERE ec.contact_type = ?
+        ORDER BY ec.confidence DESC, e.event_date ASC
+    """, (contact_type,))
+    
+    contacts = [dict(row) for row in cursor.fetchall()]
+    conn.close()
+    
+    if format_type == 'csv':
+        # Return CSV format for easy import into CRM systems
+        import csv
+        import io
+        
+        output = io.StringIO()
+        writer = csv.DictWriter(output, fieldnames=[
+            'name', 'title', 'email', 'phone', 'linkedin_url', 'company',
+            'event_title', 'event_date', 'platform', 'topic_category',
+            'confidence', 'discovery_method'
+        ])
+        
+        writer.writeheader()
+        for contact in contacts:
+            writer.writerow({
+                'name': contact.get('name', ''),
+                'title': contact.get('title', ''),
+                'email': contact.get('email', ''),
+                'phone': contact.get('phone', ''),
+                'linkedin_url': contact.get('linkedin_url', ''),
+                'company': contact.get('organization_name', contact.get('company', '')),
+                'event_title': contact.get('event_title', ''),
+                'event_date': contact.get('event_date', ''),
+                'platform': contact.get('platform', ''),
+                'topic_category': contact.get('topic_category', ''),
+                'confidence': contact.get('confidence', ''),
+                'discovery_method': contact.get('discovery_method', '')
+            })
+        
+        csv_content = output.getvalue()
+        output.close()
+        
+        return jsonify({
+            'status': 'success',
+            'data': {
+                'format': 'csv',
+                'content': csv_content,
+                'count': len(contacts)
+            }
+        })
+    
+    else:
+        # Return JSON format
+        return jsonify({
+            'status': 'success',
+            'data': {
+                'format': 'json',
+                'contacts': contacts,
+                'count': len(contacts)
+            }
+        })
+
+# --- Enhanced Collection Routes ---
+
 @app.route('/api/webinars/collect/enhanced', methods=['POST'])
 def run_enhanced_webinar_collection():
     """Run ENHANCED webinar collection with individual event extraction"""
     if not is_authenticated():
         return jsonify({'error': 'Authentication required'}), 401
+    
+    if not CONTACT_DISCOVERY_AVAILABLE:
+        return jsonify({'error': 'Enhanced collection not available. Please deploy the enhanced scraper module.'}), 503
     
     logger.info("Starting ENHANCED webinar collection with individual event extraction...")
     
@@ -381,6 +672,16 @@ def get_enhanced_webinar_analytics():
     cursor.execute("SELECT COUNT(*) as with_speakers FROM events WHERE speaker IS NOT NULL AND speaker != ''")
     events_with_speakers = cursor.fetchone()[0]
     
+    # Get contact discovery statistics
+    cursor.execute("SELECT COUNT(DISTINCT event_id) as events_with_discovered_contacts FROM event_contacts")
+    events_with_discovered_contacts = cursor.fetchone()[0]
+    
+    cursor.execute("SELECT COUNT(*) as total_discovered_contacts FROM event_contacts")
+    total_discovered_contacts = cursor.fetchone()[0]
+    
+    cursor.execute("SELECT COUNT(*) as discovered_decision_makers FROM event_contacts WHERE contact_type = 'decision_makers'")
+    discovered_decision_makers = cursor.fetchone()[0]
+    
     # Get platform breakdown
     cursor.execute("""
         SELECT platform, COUNT(*) as count 
@@ -399,16 +700,6 @@ def get_enhanced_webinar_analytics():
     """)
     topic_stats = [{'topic': row[0], 'count': row[1]} for row in cursor.fetchall()]
     
-    # Get contact information breakdown
-    cursor.execute("SELECT COUNT(*) as with_email FROM events WHERE contact_email IS NOT NULL AND contact_email != ''")
-    events_with_email = cursor.fetchone()[0]
-    
-    cursor.execute("SELECT COUNT(*) as with_phone FROM events WHERE contact_phone IS NOT NULL AND contact_phone != ''")
-    events_with_phone = cursor.fetchone()[0]
-    
-    cursor.execute("SELECT COUNT(*) as with_organizer FROM events WHERE organizer IS NOT NULL AND organizer != ''")
-    events_with_organizer = cursor.fetchone()[0]
-    
     conn.close()
     
     return jsonify({
@@ -422,10 +713,10 @@ def get_enhanced_webinar_analytics():
                 'events_with_contact': events_with_contact,
                 'events_with_speakers': events_with_speakers
             },
-            'contact_statistics': {
-                'events_with_email': events_with_email,
-                'events_with_phone': events_with_phone,
-                'events_with_organizer': events_with_organizer
+            'contact_discovery_statistics': {
+                'events_with_discovered_contacts': events_with_discovered_contacts,
+                'total_discovered_contacts': total_discovered_contacts,
+                'discovered_decision_makers': discovered_decision_makers
             },
             'platform_breakdown': platform_stats,
             'topic_breakdown': topic_stats
@@ -451,9 +742,10 @@ def get_collection_status():
     
     # Get API status
     api_status = {
-        'google_api': bool(enhanced_scraper.google_api_key and enhanced_scraper.google_cse_id),
-        'serpapi': bool(enhanced_scraper.serpapi_key),
-        'enhanced_scraping': True
+        'google_api': bool(os.environ.get('GOOGLE_API_KEY') and os.environ.get('GOOGLE_CSE_ID')),
+        'serpapi': bool(os.environ.get('SERPAPI_KEY')),
+        'enhanced_scraping': CONTACT_DISCOVERY_AVAILABLE,
+        'contact_discovery': CONTACT_DISCOVERY_AVAILABLE
     }
     
     conn.close()
@@ -482,7 +774,7 @@ LOGIN_HTML = '''
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enhanced Webinar Discovery Tool - Login</title>
+    <title>Advanced Webinar Contact Discovery - Login</title>
     <style>
         * {
             margin: 0;
@@ -505,7 +797,7 @@ LOGIN_HTML = '''
             border-radius: 10px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
             width: 100%;
-            max-width: 400px;
+            max-width: 450px;
         }
         
         .login-header {
@@ -619,18 +911,19 @@ LOGIN_HTML = '''
 <body>
     <div class="login-container">
         <div class="login-header">
-            <h1>Enhanced Webinar Discovery</h1>
-            <p>Individual events with dates & contact information</p>
+            <h1>🎯 Advanced Contact Discovery</h1>
+            <p>Find decision makers & organizers for webinar follow-up</p>
         </div>
         
         <div class="features">
-            <h4>🚀 Enhanced Features</h4>
+            <h4>🚀 Advanced Features</h4>
             <ul>
-                <li>✅ Individual webinar extraction</li>
-                <li>✅ Specific dates and times</li>
-                <li>✅ Speaker information</li>
-                <li>✅ Contact details & organizers</li>
-                <li>✅ Multi-platform scraping</li>
+                <li>✅ Decision maker identification</li>
+                <li>✅ Contact information extraction</li>
+                <li>✅ LinkedIn profile discovery</li>
+                <li>✅ Company organization mapping</li>
+                <li>✅ Outreach-ready contact lists</li>
+                <li>✅ CRM export capabilities</li>
             </ul>
         </div>
         
@@ -699,13 +992,13 @@ LOGIN_HTML = '''
 </html>
 '''
 
-ENHANCED_WEBINAR_TOOL_HTML = '''
+CONTACT_DISCOVERY_HTML = '''
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enhanced Webinar Discovery Tool - Enders Consulting</title>
+    <title>Advanced Webinar Contact Discovery - Enders Consulting</title>
     <style>
         * {
             margin: 0;
@@ -721,7 +1014,7 @@ ENHANCED_WEBINAR_TOOL_HTML = '''
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
             padding: 20px;
         }
@@ -822,8 +1115,12 @@ ENHANCED_WEBINAR_TOOL_HTML = '''
             transform: none;
         }
 
-        .enhanced-btn {
+        .contact-btn {
             background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        }
+
+        .bulk-btn {
+            background: linear-gradient(135deg, #fd7e14 0%, #e83e8c 100%);
         }
 
         .stats {
@@ -921,7 +1218,7 @@ ENHANCED_WEBINAR_TOOL_HTML = '''
             color: white;
         }
 
-        .event-meta .speaker {
+        .event-meta .decision-makers {
             background: #fd7e14;
             color: white;
         }
@@ -932,22 +1229,68 @@ ENHANCED_WEBINAR_TOOL_HTML = '''
             line-height: 1.5;
         }
 
-        .event-contact {
+        .contact-section {
             background: #f8f9fa;
-            padding: 0.75rem;
+            padding: 1rem;
             border-radius: 5px;
             margin-bottom: 1rem;
-            font-size: 0.9rem;
         }
 
-        .event-contact h4 {
+        .contact-section h4 {
             margin-bottom: 0.5rem;
             color: #333;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .contact-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+
+        .contact-card {
+            background: white;
+            padding: 1rem;
+            border-radius: 5px;
+            border-left: 4px solid #667eea;
+        }
+
+        .contact-card.decision-maker {
+            border-left-color: #fd7e14;
+        }
+
+        .contact-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.25rem;
+        }
+
+        .contact-title {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .contact-details {
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .contact-details a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .contact-details a:hover {
+            text-decoration: underline;
         }
 
         .event-actions {
             display: flex;
             gap: 0.5rem;
+            flex-wrap: wrap;
         }
 
         .btn-small {
@@ -963,6 +1306,14 @@ ENHANCED_WEBINAR_TOOL_HTML = '''
 
         .btn-small:hover {
             background: #5a6fd8;
+        }
+
+        .btn-small.contact-btn {
+            background: #28a745;
+        }
+
+        .btn-small.contact-btn:hover {
+            background: #218838;
         }
 
         .loading {
@@ -1029,6 +1380,10 @@ ENHANCED_WEBINAR_TOOL_HTML = '''
             .event-actions {
                 flex-direction: column;
             }
+            
+            .contact-list {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -1036,12 +1391,12 @@ ENHANCED_WEBINAR_TOOL_HTML = '''
     <div class="container">
         <div class="header">
             <button class="logout-btn" onclick="logout()">Logout</button>
-            <h1>Enhanced Webinar Discovery</h1>
-            <p>Individual events with dates, speakers, and contact information</p>
+            <h1>🎯 Advanced Contact Discovery</h1>
+            <p>Find decision makers and organizers for webinar follow-up opportunities</p>
         </div>
 
         <div class="controls">
-            <h2>Enhanced Search & Collection Controls</h2>
+            <h2>Contact Discovery & Search Controls</h2>
             
             <div class="control-group">
                 <div class="control-item">
@@ -1078,10 +1433,10 @@ ENHANCED_WEBINAR_TOOL_HTML = '''
                     </select>
                 </div>
                 <div class="control-item">
-                    <label for="contactFilter">Has Contact Info</label>
+                    <label for="contactFilter">Contact Discovery</label>
                     <select id="contactFilter">
                         <option value="">All Events</option>
-                        <option value="true">With Contact Info</option>
+                        <option value="true">With Decision Makers</option>
                     </select>
                 </div>
             </div>
@@ -1091,10 +1446,13 @@ ENHANCED_WEBINAR_TOOL_HTML = '''
                     <button onclick="searchEvents()">Search Events</button>
                 </div>
                 <div class="control-item">
-                    <button onclick="runEnhancedCollection()" id="enhancedCollectBtn" class="enhanced-btn">🚀 Run Enhanced Collection</button>
+                    <button onclick="runEnhancedCollection()" id="enhancedCollectBtn">🚀 Run Enhanced Collection</button>
                 </div>
                 <div class="control-item">
-                    <button onclick="loadEnhancedStats()">Refresh Stats</button>
+                    <button onclick="bulkDiscoverContacts()" id="bulkContactBtn" class="bulk-btn">🎯 Bulk Contact Discovery</button>
+                </div>
+                <div class="control-item">
+                    <button onclick="exportContacts()" class="contact-btn">📊 Export Contacts</button>
                 </div>
             </div>
         </div>
@@ -1107,34 +1465,34 @@ ENHANCED_WEBINAR_TOOL_HTML = '''
                 <div class="stat-label">Total Events</div>
             </div>
             <div class="stat-card">
-                <div class="stat-number" id="upcomingEvents">-</div>
-                <div class="stat-label">Upcoming Events</div>
+                <div class="stat-number" id="eventsWithContacts">-</div>
+                <div class="stat-label">With Discovered Contacts</div>
             </div>
             <div class="stat-card">
-                <div class="stat-number" id="eventsWithDates">-</div>
-                <div class="stat-label">With Dates</div>
+                <div class="stat-number" id="totalContacts">-</div>
+                <div class="stat-label">Total Contacts</div>
             </div>
             <div class="stat-card">
-                <div class="stat-number" id="eventsWithContact">-</div>
-                <div class="stat-label">With Contact Info</div>
+                <div class="stat-number" id="decisionMakers">-</div>
+                <div class="stat-label">Decision Makers</div>
             </div>
             <div class="stat-card">
-                <div class="stat-number" id="eventsWithSpeakers">-</div>
-                <div class="stat-label">With Speakers</div>
+                <div class="stat-number" id="contactsWithEmail">-</div>
+                <div class="stat-label">With Email</div>
             </div>
             <div class="stat-card">
-                <div class="stat-number" id="freeEvents">-</div>
-                <div class="stat-label">Free Events</div>
+                <div class="stat-number" id="contactsWithLinkedIn">-</div>
+                <div class="stat-label">With LinkedIn</div>
             </div>
         </div>
 
         <div class="events-container">
             <div class="events-header">
-                <h2>Individual Webinar Events</h2>
-                <p>Enhanced extraction with dates, speakers, and contact information</p>
+                <h2>Webinar Events with Contact Discovery</h2>
+                <p>Advanced contact extraction for decision makers and organizers</p>
             </div>
             <div id="eventsContainer">
-                <div class="loading">Click "Run Enhanced Collection" to discover individual webinars with full details</div>
+                <div class="loading">Click "Search Events" to view your existing webinar data, then "Bulk Contact Discovery" to find decision makers</div>
             </div>
             <div id="paginationContainer"></div>
         </div>
@@ -1144,9 +1502,11 @@ ENHANCED_WEBINAR_TOOL_HTML = '''
         let currentPage = 1;
         const perPage = 10;
 
-        // Load initial stats
+        // Load initial stats and events
         document.addEventListener('DOMContentLoaded', function() {
+            loadContactAnalytics();
             loadEnhancedStats();
+            searchEvents(); // Load existing events immediately
         });
 
         async function logout() {
@@ -1162,6 +1522,26 @@ ENHANCED_WEBINAR_TOOL_HTML = '''
             }
         }
 
+        async function loadContactAnalytics() {
+            try {
+                const response = await fetch('/api/webinars/contacts/analytics', {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    const stats = data.data.summary;
+                    document.getElementById('eventsWithContacts').textContent = stats.events_with_contacts;
+                    document.getElementById('totalContacts').textContent = stats.total_contacts;
+                    document.getElementById('decisionMakers').textContent = stats.decision_makers;
+                    document.getElementById('contactsWithEmail').textContent = stats.contacts_with_email;
+                    document.getElementById('contactsWithLinkedIn').textContent = stats.contacts_with_linkedin;
+                }
+            } catch (error) {
+                console.error('Error loading contact analytics:', error);
+            }
+        }
+
         async function loadEnhancedStats() {
             try {
                 const response = await fetch('/api/webinars/analytics/enhanced', {
@@ -1172,11 +1552,6 @@ ENHANCED_WEBINAR_TOOL_HTML = '''
                 if (data.status === 'success') {
                     const stats = data.data;
                     document.getElementById('totalEvents').textContent = stats.event_statistics.total_events;
-                    document.getElementById('upcomingEvents').textContent = stats.event_statistics.upcoming_events;
-                    document.getElementById('eventsWithDates').textContent = stats.event_statistics.events_with_dates;
-                    document.getElementById('eventsWithContact').textContent = stats.event_statistics.events_with_contact;
-                    document.getElementById('eventsWithSpeakers').textContent = stats.event_statistics.events_with_speakers;
-                    document.getElementById('freeEvents').textContent = stats.event_statistics.free_events;
                 }
             } catch (error) {
                 console.error('Error loading enhanced stats:', error);
@@ -1187,7 +1562,7 @@ ENHANCED_WEBINAR_TOOL_HTML = '''
             const searchTerm = document.getElementById('searchTerm').value;
             const topic = document.getElementById('topicFilter').value;
             const platform = document.getElementById('platformFilter').value;
-            const hasContact = document.getElementById('contactFilter').value;
+            const hasDecisionMakers = document.getElementById('contactFilter').value;
 
             const params = new URLSearchParams({
                 page: currentPage,
@@ -1197,7 +1572,7 @@ ENHANCED_WEBINAR_TOOL_HTML = '''
             if (searchTerm) params.append('search', searchTerm);
             if (topic) params.append('topic', topic);
             if (platform) params.append('platform', platform);
-            if (hasContact) params.append('has_contact', hasContact);
+            if (hasDecisionMakers) params.append('has_decision_makers', hasDecisionMakers);
 
             try {
                 showLoading();
@@ -1207,7 +1582,7 @@ ENHANCED_WEBINAR_TOOL_HTML = '''
                 const data = await response.json();
 
                 if (data.status === 'success') {
-                    displayEnhancedEvents(data.data.events);
+                    displayEventsWithContacts(data.data.events);
                     displayPagination(data.data.pagination);
                     clearMessage();
                 } else {
@@ -1224,7 +1599,7 @@ ENHANCED_WEBINAR_TOOL_HTML = '''
             collectBtn.textContent = '🚀 Running Enhanced Collection...';
 
             try {
-                showMessage('Starting enhanced webinar collection with individual event extraction...', 'info');
+                showMessage('Starting enhanced webinar collection...', 'info');
                 
                 const response = await fetch('/api/webinars/collect/enhanced', {
                     method: 'POST',
@@ -1234,20 +1609,13 @@ ENHANCED_WEBINAR_TOOL_HTML = '''
 
                 if (data.status === 'success') {
                     const result = data.data;
-                    const stats = result.search_stats || {};
-                    
                     showMessage(
-                        `🎉 Enhanced collection completed! Found ${result.events_found} individual webinars, ` +
-                        `${result.events_new} new, ${result.events_updated} updated. ` +
-                        `Listing pages: ${stats.listing_pages_found || 0}, ` +
-                        `Individual events: ${stats.individual_events_extracted || 0}, ` +
-                        `With dates: ${stats.events_with_dates || 0}, ` +
-                        `With contact info: ${stats.events_with_contact_info || 0}. ` +
-                        `Execution time: ${result.execution_time.toFixed(2)}s`,
+                        `🎉 Enhanced collection completed! Found ${result.events_found} webinars, ` +
+                        `${result.events_new} new, ${result.events_updated} updated.`,
                         'success'
                     );
                     
-                    // Refresh stats and events
+                    loadContactAnalytics();
                     loadEnhancedStats();
                     searchEvents();
                 } else {
@@ -1261,7 +1629,105 @@ ENHANCED_WEBINAR_TOOL_HTML = '''
             }
         }
 
-        function displayEnhancedEvents(events) {
+        async function bulkDiscoverContacts() {
+            const bulkBtn = document.getElementById('bulkContactBtn');
+            bulkBtn.disabled = true;
+            bulkBtn.textContent = '🎯 Discovering Contacts...';
+
+            try {
+                showMessage('Starting bulk contact discovery for decision makers and organizers...', 'info');
+                
+                const response = await fetch('/api/webinars/contacts/bulk-discover', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ limit: 20 })
+                });
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    const result = data.data;
+                    showMessage(
+                        `🎯 Contact discovery completed! Processed ${result.processed} events, ` +
+                        `found ${result.total_decision_makers} decision makers and ${result.total_contacts_found} total contacts.`,
+                        'success'
+                    );
+                    
+                    loadContactAnalytics();
+                    searchEvents();
+                } else {
+                    showError('Contact discovery failed: ' + (data.message || 'Unknown error'));
+                }
+            } catch (error) {
+                showError('Error running contact discovery: ' + error.message);
+            } finally {
+                bulkBtn.disabled = false;
+                bulkBtn.textContent = '🎯 Bulk Contact Discovery';
+            }
+        }
+
+        async function discoverEventContacts(eventId) {
+            try {
+                showMessage(`Discovering contacts for event ${eventId}...`, 'info');
+                
+                const response = await fetch('/api/webinars/contacts/discover', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ event_id: eventId })
+                });
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    const result = data.data;
+                    showMessage(
+                        `✅ Found ${result.decision_makers.length} decision makers and ${result.general_contacts.length} contacts for this event.`,
+                        'success'
+                    );
+                    
+                    loadContactAnalytics();
+                    searchEvents();
+                } else {
+                    showError('Contact discovery failed for this event');
+                }
+            } catch (error) {
+                showError('Error discovering contacts: ' + error.message);
+            }
+        }
+
+        async function exportContacts() {
+            try {
+                const response = await fetch('/api/webinars/contacts/export?type=decision_makers&format=csv', {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    // Create and download CSV file
+                    const blob = new Blob([data.data.content], { type: 'text/csv' });
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'webinar_decision_makers.csv';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                    
+                    showMessage(`📊 Exported ${data.data.count} decision makers to CSV file.`, 'success');
+                } else {
+                    showError('Export failed');
+                }
+            } catch (error) {
+                showError('Error exporting contacts: ' + error.message);
+            }
+        }
+
+        function displayEventsWithContacts(events) {
             const container = document.getElementById('eventsContainer');
             
             if (events.length === 0) {
@@ -1273,17 +1739,53 @@ ENHANCED_WEBINAR_TOOL_HTML = '''
                 const eventDate = event.event_date ? new Date(event.event_date).toLocaleDateString() : 'TBD';
                 const eventTime = event.event_date ? new Date(event.event_date).toLocaleTimeString() : '';
 
-                // Build contact information
-                let contactInfo = '';
-                if (event.organizer || event.contact_email || event.contact_phone) {
-                    contactInfo = `
-                        <div class="event-contact">
-                            <h4>📞 Contact Information</h4>
-                            ${event.organizer ? `<div><strong>Organizer:</strong> ${event.organizer}</div>` : ''}
-                            ${event.contact_email ? `<div><strong>Email:</strong> <a href="mailto:${event.contact_email}">${event.contact_email}</a></div>` : ''}
-                            ${event.contact_phone ? `<div><strong>Phone:</strong> <a href="tel:${event.contact_phone}">${event.contact_phone}</a></div>` : ''}
+                // Build contact sections
+                let contactsHtml = '';
+                
+                if (event.decision_makers && event.decision_makers.length > 0) {
+                    contactsHtml += `
+                        <div class="contact-section">
+                            <h4>🎯 Decision Makers (${event.decision_makers.length})</h4>
+                            <div class="contact-list">
+                                ${event.decision_makers.map(contact => `
+                                    <div class="contact-card decision-maker">
+                                        <div class="contact-name">${contact.name || 'Name not available'}</div>
+                                        <div class="contact-title">${contact.title || 'Title not available'}</div>
+                                        <div class="contact-details">
+                                            ${contact.email ? `<div>📧 <a href="mailto:${contact.email}">${contact.email}</a></div>` : ''}
+                                            ${contact.phone ? `<div>📞 <a href="tel:${contact.phone}">${contact.phone}</a></div>` : ''}
+                                            ${contact.linkedin_url ? `<div>💼 <a href="${contact.linkedin_url}" target="_blank">LinkedIn Profile</a></div>` : ''}
+                                            ${contact.company ? `<div>🏢 ${contact.company}</div>` : ''}
+                                            <div>🎯 Confidence: ${Math.round((contact.confidence || 0) * 100)}%</div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
                         </div>
                     `;
+                }
+                
+                if (event.all_contacts && event.all_contacts.length > event.decision_makers.length) {
+                    const otherContacts = event.all_contacts.filter(c => c.contact_type !== 'decision_makers');
+                    if (otherContacts.length > 0) {
+                        contactsHtml += `
+                            <div class="contact-section">
+                                <h4>📞 Other Contacts (${otherContacts.length})</h4>
+                                <div class="contact-list">
+                                    ${otherContacts.slice(0, 3).map(contact => `
+                                        <div class="contact-card">
+                                            <div class="contact-name">${contact.name || 'Name not available'}</div>
+                                            <div class="contact-title">${contact.title || contact.contact_type}</div>
+                                            <div class="contact-details">
+                                                ${contact.email ? `<div>📧 <a href="mailto:${contact.email}">${contact.email}</a></div>` : ''}
+                                                ${contact.linkedin_url ? `<div>💼 <a href="${contact.linkedin_url}" target="_blank">LinkedIn</a></div>` : ''}
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        `;
+                    }
                 }
 
                 return `
@@ -1294,20 +1796,21 @@ ENHANCED_WEBINAR_TOOL_HTML = '''
                             <span>📅 ${eventDate}${eventTime ? ' ' + eventTime : ''}</span>
                             ${event.is_free ? '<span class="free">FREE</span>' : '<span>💰 Paid</span>'}
                             ${event.topic_category ? `<span>🏷️ ${event.topic_category}</span>` : ''}
-                            ${event.speaker ? `<span class="speaker">👤 ${event.speaker}</span>` : ''}
-                            ${(event.organizer || event.contact_email || event.contact_phone) ? '<span class="contact">📞 Contact Available</span>' : ''}
+                            ${event.decision_maker_count > 0 ? `<span class="decision-makers">🎯 ${event.decision_maker_count} Decision Makers</span>` : ''}
+                            ${event.total_contact_count > 0 ? `<span class="contact">📞 ${event.total_contact_count} Contacts</span>` : ''}
                         </div>
                         <div class="event-description">
-                            ${event.description ? event.description.substring(0, 300) + '...' : 'No description available'}
+                            ${event.description ? event.description.substring(0, 200) + '...' : 'No description available'}
                         </div>
-                        ${contactInfo}
+                        ${event.organization_name ? `<div style="margin-bottom: 1rem;"><strong>🏢 Organization:</strong> ${event.organization_name}</div>` : ''}
+                        ${contactsHtml}
                         <div class="event-actions">
                             ${event.registration_url ? 
                                 `<a href="${event.registration_url}" target="_blank" class="btn-small">Register</a>` : 
                                 ''
                             }
-                            ${event.source_page && event.source_page !== event.registration_url ? 
-                                `<a href="${event.source_page}" target="_blank" class="btn-small" style="background: #6c757d;">View Source</a>` : 
+                            ${event.decision_maker_count === 0 ? 
+                                `<button onclick="discoverEventContacts(${event.id})" class="btn-small contact-btn">🎯 Discover Contacts</button>` : 
                                 ''
                             }
                         </div>
@@ -1328,18 +1831,15 @@ ENHANCED_WEBINAR_TOOL_HTML = '''
 
             let paginationHtml = '<div class="pagination">';
             
-            // Previous button
             if (pagination.has_prev) {
                 paginationHtml += `<button onclick="changePage(${pagination.page - 1})">Previous</button>`;
             }
 
-            // Page numbers
             for (let i = Math.max(1, pagination.page - 2); i <= Math.min(pagination.pages, pagination.page + 2); i++) {
                 const activeClass = i === pagination.page ? 'active' : '';
                 paginationHtml += `<button class="${activeClass}" onclick="changePage(${i})">${i}</button>`;
             }
 
-            // Next button
             if (pagination.has_next) {
                 paginationHtml += `<button onclick="changePage(${pagination.page + 1})">Next</button>`;
             }
@@ -1354,7 +1854,7 @@ ENHANCED_WEBINAR_TOOL_HTML = '''
         }
 
         function showLoading() {
-            document.getElementById('eventsContainer').innerHTML = '<div class="loading">Loading enhanced events...</div>';
+            document.getElementById('eventsContainer').innerHTML = '<div class="loading">Loading events with contact discovery...</div>';
         }
 
         function showMessage(message, type = 'info') {
@@ -1372,7 +1872,10 @@ ENHANCED_WEBINAR_TOOL_HTML = '''
         }
 
         // Auto-refresh stats every 5 minutes
-        setInterval(loadEnhancedStats, 5 * 60 * 1000);
+        setInterval(() => {
+            loadContactAnalytics();
+            loadEnhancedStats();
+        }, 5 * 60 * 1000);
     </script>
 </body>
 </html>
@@ -1382,4 +1885,3 @@ ENHANCED_WEBINAR_TOOL_HTML = '''
 if __name__ == '__main__':
     # The API will run on port 5001 to avoid conflict with Next.js (port 3000)
     app.run(host='0.0.0.0', port=5001, debug=True)
-
