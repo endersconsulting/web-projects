@@ -5,7 +5,7 @@
 
 import { useState } from 'react';
 import styles from '../styles/Home.module.css';
-import CybersecurityNews from '../components/CybersecurityNews';
+import CybersecurityNews from '../omponents/CyberSecurityNews';
 
 export default function Home() {
   // State for the detailed contact form
