@@ -5,6 +5,7 @@
 
 import { useState } from 'react';
 import styles from '../styles/Home.module.css';
+import CybersecurityNews from '../components/CybersecurityNews';
 
 export default function Home() {
   // State for the detailed contact form
@@ -111,25 +112,16 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Security in the News Section */}
+        {/* Enhanced Security in the News Section - Now with Real Data */}
         <section className={styles.newsSection}>
-          <h3 className={styles.sectionTitle}>Security in the News</h3>
-          <div className={styles.newsGrid}>
-            <div className={styles.newsCard}>
-              <h4>Major Tech Firm Breached</h4>
-              <p>A significant data breach affecting millions highlights the importance of multi-factor authentication and proactive threat monitoring...</p>
-              <a href="#" className={styles.readMoreLink}>Read More</a>
-            </div>
-            <div className={styles.newsCard}>
-              <h4>Rise of AI in Phishing Attacks</h4>
-              <p>Cybercriminals are now leveraging generative AI to create more convincing phishing emails, making employee training more critical than ever.</p>
-              <a href="#" className={styles.readMoreLink}>Read More</a>
-            </div>
-            <div className={styles.newsCard}>
-              <h4>New Compliance Regulations</h4>
-              <p>A new set of data privacy regulations will come into effect next quarter, impacting how businesses handle customer information.</p>
-              <a href="#" className={styles.readMoreLink}>Read More</a>
-            </div>
+          <div className={styles.newsHeader}>
+            <h3 className={styles.sectionTitle}>Security in the News</h3>
+            <p className={styles.newsSubtitle}>Stay informed about the latest cybersecurity threats and developments</p>
+          </div>
+          
+          {/* Real-time cybersecurity news feed */}
+          <div className={styles.realNewsContainer}>
+            <CybersecurityNews maxArticles={6} showImages={true} compact={false} />
           </div>
         </section>
 
@@ -156,7 +148,7 @@ export default function Home() {
         </section>
 
         {/* =============================================================== */}
-        {/* ==================== NEW SECTION STARTS HERE ================== */}
+        {/* ==================== AI AGENCY SECTION ======================= */}
         {/* =============================================================== */}
         <section className={styles.aiAgencySection}>
           <div className={styles.aiAgencyHeader}>
@@ -222,7 +214,7 @@ export default function Home() {
           </div>
         </section>
         {/* =============================================================== */}
-        {/* ===================== NEW SECTION ENDS HERE =================== */}
+        {/* ===================== AI AGENCY SECTION ENDS ================== */}
         {/* =============================================================== */}
 
         {/* Detailed Inquiry Section */}
@@ -247,3 +239,4 @@ export default function Home() {
     </div>
   );
 }
+
