@@ -1,20 +1,20 @@
-// CybersecurityNews.js
-// React component for displaying The Hacker News cybersecurity feed
+// components/CyberSecurityNews.js
+// Fixed version without ugly external link icons
 
-import React, { useState, useEffect } from 'react';
+"use client";
 
-const CybersecurityNews = ({ maxArticles = 6, showImages = true, compact = false }) => {
+import { useState, useEffect } from 'react';
+
+export default function CyberSecurityNews({ 
+  maxArticles = 6, 
+  showImages = true, 
+  compact = false,
+  className = '' 
+}) {
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
-
-  useEffect(() => {
-    fetchNews();
-    // Refresh every 15 minutes
-    const interval = setInterval(fetchNews, 15 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, []);
 
   const fetchNews = async () => {
     try {
@@ -27,236 +27,459 @@ const CybersecurityNews = ({ maxArticles = 6, showImages = true, compact = false
         setLastUpdated(new Date(data.data.last_updated));
         setError(null);
       } else {
-        setError(data.message || 'Failed to fetch news');
+        setError('Failed to fetch news');
       }
     } catch (err) {
-      setError('Network error: Unable to fetch news');
+      setError('Error loading cybersecurity news');
       console.error('News fetch error:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  const getCategoryColor = (category) => {
-    const colors = {
-      'Data Breach': 'bg-red-100 text-red-800',
-      'Ransomware': 'bg-purple-100 text-purple-800',
-      'Vulnerability': 'bg-orange-100 text-orange-800',
-      'Malware': 'bg-yellow-100 text-yellow-800',
-      'Cyber Attack': 'bg-red-100 text-red-800',
-      'Mobile Security': 'bg-blue-100 text-blue-800',
-      'Cloud Security': 'bg-cyan-100 text-cyan-800',
-      'AI Security': 'bg-green-100 text-green-800',
-      'Critical Infrastructure': 'bg-gray-100 text-gray-800',
-      'Privacy': 'bg-indigo-100 text-indigo-800',
-      'Phishing': 'bg-pink-100 text-pink-800',
-      'General Security': 'bg-gray-100 text-gray-800'
-    };
-    return colors[category] || 'bg-gray-100 text-gray-800';
+  useEffect(() => {
+    fetchNews();
+    
+    // Auto-refresh every 15 minutes
+    const interval = setInterval(fetchNews, 15 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [maxArticles]);
+
+  const formatDate = (dateString) => {
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric',
+        year: 'numeric'
+      });
+    } catch {
+      return dateString;
+    }
   };
 
-  const formatTimeAgo = (date) => {
-    const now = new Date();
-    const diffInHours = Math.floor((now - date) / (1000 * 60 * 60));
-    
-    if (diffInHours < 1) return 'Less than an hour ago';
-    if (diffInHours < 24) return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
-    
-    const diffInDays = Math.floor(diffInHours / 24);
-    if (diffInDays < 7) return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
-    
-    return date.toLocaleDateString();
+  const getCategoryColor = (category) => {
+    const colors = {
+      'Data Breach': '#ef4444',
+      'Vulnerability': '#f97316', 
+      'Malware': '#dc2626',
+      'Ransomware': '#b91c1c',
+      'Cloud Security': '#3b82f6',
+      'AI Security': '#8b5cf6',
+      'General Security': '#6b7280'
+    };
+    return colors[category] || '#6b7280';
   };
 
   if (loading) {
     return (
-      <div className="bg-white rounded-lg shadow-lg p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">Security in the News</h2>
-          <div className="flex items-center text-sm text-gray-500">
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
-            Loading latest news...
-          </div>
+      <div className={`cybersecurity-news ${className}`}>
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+          <p>Loading latest cybersecurity news...</p>
         </div>
-        <div className="space-y-4">
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className="animate-pulse">
-              <div className="flex space-x-4">
-                <div className="rounded-lg bg-gray-200 h-20 w-32 flex-shrink-0"></div>
-                <div className="flex-1 space-y-2">
-                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                  <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-                  <div className="h-3 bg-gray-200 rounded w-full"></div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+        
+        <style jsx>{`
+          .cybersecurity-news {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+          }
+          
+          .loading-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 20px;
+            text-align: center;
+          }
+          
+          .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 16px;
+          }
+          
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-white rounded-lg shadow-lg p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">Security in the News</h2>
-          <button 
-            onClick={fetchNews}
-            className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-          >
+      <div className={`cybersecurity-news ${className}`}>
+        <div className="error-container">
+          <div className="error-icon">⚠️</div>
+          <h3>Unable to Load Security News</h3>
+          <p>{error}</p>
+          <button onClick={fetchNews} className="retry-button">
             Try Again
           </button>
         </div>
-        <div className="text-center py-8">
-          <div className="text-red-600 mb-2">⚠️ Unable to load news</div>
-          <div className="text-gray-600 text-sm">{error}</div>
-        </div>
+        
+        <style jsx>{`
+          .cybersecurity-news {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+          }
+          
+          .error-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 20px;
+            text-align: center;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 8px;
+          }
+          
+          .error-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+          }
+          
+          .retry-button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            margin-top: 16px;
+            transition: background-color 0.2s;
+          }
+          
+          .retry-button:hover {
+            background: #2563eb;
+          }
+        `}</style>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Security in the News</h2>
-          <p className="text-gray-600 text-sm mt-1">Latest cybersecurity threats and updates</p>
-        </div>
-        <div className="flex items-center space-x-4">
+    <div className={`cybersecurity-news ${className}`}>
+      {/* Header with last updated info */}
+      <div className="news-header">
+        <div className="news-meta">
+          <span className="live-indicator">🔴 LIVE</span>
           {lastUpdated && (
-            <div className="text-xs text-gray-500">
-              Updated {formatTimeAgo(lastUpdated)}
-            </div>
+            <span className="last-updated">
+              Updated {lastUpdated.toLocaleTimeString('en-US', { 
+                hour: 'numeric', 
+                minute: '2-digit',
+                hour12: true 
+              })}
+            </span>
           )}
-          <button 
-            onClick={fetchNews}
-            className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center"
-            disabled={loading}
-          >
-            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-            Refresh
+          <button onClick={fetchNews} className="refresh-button" title="Refresh News">
+            🔄
           </button>
         </div>
       </div>
 
-      {/* Articles */}
-      <div className="space-y-6">
+      {/* News Grid */}
+      <div className={`news-grid ${compact ? 'compact' : ''}`}>
         {articles.map((article, index) => (
-          <article 
-            key={index} 
-            className={`group hover:bg-gray-50 rounded-lg p-4 transition-colors duration-200 ${
-              compact ? 'border-b border-gray-200 last:border-b-0' : 'border border-gray-200'
-            }`}
-          >
-            <div className="flex space-x-4">
-              {/* Article Image */}
-              {showImages && article.image_url && (
-                <div className="flex-shrink-0">
-                  <img 
-                    src={article.image_url} 
-                    alt={article.title}
-                    className="w-24 h-20 object-cover rounded-lg"
-                    onError={(e) => {
-                      e.target.style.display = 'none';
-                    }}
-                  />
-                </div>
-              )}
+          <article key={index} className="news-card">
+            {showImages && article.image_url && (
+              <div className="news-image">
+                <img 
+                  src={article.image_url} 
+                  alt={article.title}
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                  }}
+                />
+              </div>
+            )}
+            
+            <div className="news-content">
+              <div className="news-meta-info">
+                <span 
+                  className="category-badge"
+                  style={{ backgroundColor: getCategoryColor(article.category) }}
+                >
+                  {article.category}
+                </span>
+                <span className="publish-date">
+                  {formatDate(article.published_date)}
+                </span>
+              </div>
               
-              {/* Article Content */}
-              <div className="flex-1 min-w-0">
-                {/* Category Badge */}
-                <div className="flex items-center space-x-2 mb-2">
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getCategoryColor(article.category)}`}>
-                    {article.category}
-                  </span>
-                  <span className="text-xs text-gray-500">
-                    {article.published_date}
-                  </span>
-                </div>
-                
-                {/* Title */}
-                <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors duration-200">
-                  <a 
-                    href={article.link} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="hover:underline"
-                  >
-                    {article.title}
-                  </a>
-                </h3>
-                
-                {/* Description */}
-                <p className="text-gray-600 text-sm mb-3 leading-relaxed">
-                  {article.description}
-                </p>
-                
-                {/* Footer */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center text-xs text-gray-500">
-                    <span className="font-medium">{article.source}</span>
-                  </div>
-                  <a 
-                    href={article.link} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center text-blue-600 hover:text-blue-800 text-sm font-medium"
-                  >
-                    Read More
-                    <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                    </svg>
-                  </a>
-                </div>
+              <h3 className="news-title">
+                <a 
+                  href={article.link} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="news-link"
+                >
+                  {article.title}
+                </a>
+              </h3>
+              
+              <p className="news-description">
+                {article.description}
+              </p>
+              
+              <div className="news-footer">
+                <span className="news-source">{article.source}</span>
+                <a 
+                  href={article.link} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="read-more"
+                >
+                  Read Full Article
+                </a>
               </div>
             </div>
           </article>
         ))}
       </div>
 
-      {/* Footer */}
-      <div className="mt-6 pt-4 border-t border-gray-200">
-        <div className="flex items-center justify-between">
-          <div className="text-xs text-gray-500">
-            Powered by <a href="https://thehackernews.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">The Hacker News</a>
-          </div>
-          <a 
-            href="https://thehackernews.com" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="text-sm text-blue-600 hover:text-blue-800 font-medium"
-          >
-            View All News →
-          </a>
-        </div>
-      </div>
+      <style jsx>{`
+        .cybersecurity-news {
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 20px;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        .news-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 24px;
+          padding-bottom: 16px;
+          border-bottom: 2px solid #e5e7eb;
+        }
+        
+        .news-meta {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+        }
+        
+        .live-indicator {
+          background: #dc2626;
+          color: white;
+          padding: 4px 8px;
+          border-radius: 4px;
+          font-size: 12px;
+          font-weight: bold;
+          animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.7; }
+        }
+        
+        .last-updated {
+          color: #6b7280;
+          font-size: 14px;
+        }
+        
+        .refresh-button {
+          background: none;
+          border: 1px solid #d1d5db;
+          padding: 6px 10px;
+          border-radius: 4px;
+          cursor: pointer;
+          font-size: 14px;
+          transition: all 0.2s;
+        }
+        
+        .refresh-button:hover {
+          background: #f3f4f6;
+          transform: rotate(180deg);
+        }
+        
+        .news-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+          gap: 24px;
+        }
+        
+        .news-grid.compact {
+          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+          gap: 16px;
+        }
+        
+        .news-card {
+          background: white;
+          border-radius: 12px;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+          overflow: hidden;
+          transition: all 0.3s ease;
+          border: 1px solid #e5e7eb;
+        }
+        
+        .news-card:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .news-image {
+          width: 100%;
+          height: 200px;
+          overflow: hidden;
+          background: #f3f4f6;
+        }
+        
+        .news-image img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          transition: transform 0.3s ease;
+        }
+        
+        .news-card:hover .news-image img {
+          transform: scale(1.05);
+        }
+        
+        .news-content {
+          padding: 20px;
+        }
+        
+        .news-meta-info {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 12px;
+        }
+        
+        .category-badge {
+          color: white;
+          padding: 4px 8px;
+          border-radius: 4px;
+          font-size: 12px;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+        
+        .publish-date {
+          color: #6b7280;
+          font-size: 12px;
+        }
+        
+        .news-title {
+          margin: 0 0 12px 0;
+          font-size: 18px;
+          font-weight: 600;
+          line-height: 1.4;
+        }
+        
+        .news-link {
+          color: #1f2937;
+          text-decoration: none;
+          transition: color 0.2s;
+        }
+        
+        .news-link:hover {
+          color: #3b82f6;
+        }
+        
+        .news-description {
+          color: #4b5563;
+          font-size: 14px;
+          line-height: 1.6;
+          margin: 0 0 16px 0;
+          display: -webkit-box;
+          -webkit-line-clamp: 3;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+        
+        .news-footer {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding-top: 12px;
+          border-top: 1px solid #e5e7eb;
+        }
+        
+        .news-source {
+          color: #6b7280;
+          font-size: 12px;
+          font-weight: 500;
+        }
+        
+        .read-more {
+          color: #3b82f6;
+          text-decoration: none;
+          font-size: 13px;
+          font-weight: 500;
+          transition: color 0.2s;
+        }
+        
+        .read-more:hover {
+          color: #2563eb;
+          text-decoration: underline;
+        }
+        
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+          .cybersecurity-news {
+            padding: 16px;
+          }
+          
+          .news-grid {
+            grid-template-columns: 1fr;
+            gap: 16px;
+          }
+          
+          .news-content {
+            padding: 16px;
+          }
+          
+          .news-title {
+            font-size: 16px;
+          }
+          
+          .news-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 12px;
+          }
+        }
+        
+        /* Dark mode support */
+        @media (prefers-color-scheme: dark) {
+          .news-card {
+            background: #1f2937;
+            border-color: #374151;
+          }
+          
+          .news-link {
+            color: #f9fafb;
+          }
+          
+          .news-description {
+            color: #d1d5db;
+          }
+          
+          .news-footer {
+            border-color: #374151;
+          }
+        }
+      `}</style>
     </div>
   );
-};
-
-export default CybersecurityNews;
-
-// Usage Examples:
-/*
-// Basic usage
-<CybersecurityNews />
-
-// Compact version with fewer articles
-<CybersecurityNews maxArticles={4} compact={true} />
-
-// Without images
-<CybersecurityNews showImages={false} />
-
-// Custom styling
-<CybersecurityNews 
-  maxArticles={8} 
-  showImages={true} 
-  compact={false} 
-/>
-*/
+}
 
