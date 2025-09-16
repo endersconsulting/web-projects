@@ -1,5 +1,5 @@
 // app/page.js
-// This is the main frontend component, redesigned to model langtech.com.
+// This is the main frontend component with integrated logo
 
 "use client";
 
@@ -90,11 +90,34 @@ export default function Home() {
 
   return (
     <div className={styles.container}>
-      {/* Header Section */}
+      {/* Enhanced Header Section with Logo */}
       <header className={styles.header}>
         <div className={styles.logo}>
+          {/* Logo SVG */}
+          <div className={styles.logoIcon}>
+            <svg width="40" height="28" viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="amplificationGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" style={{stopColor:"#3B82F6", stopOpacity:0.7}} />
+                  <stop offset="100%" style={{stopColor:"#1E40AF", stopOpacity:1}} />
+                </linearGradient>
+              </defs>
+              
+              {/* Bottom bar - "Your Idea" */}
+              <rect x="20" y="54" width="80" height="16" rx="8" ry="8" fill="url(#amplificationGradient)" opacity="0.6"/>
+              
+              {/* Middle bar - "Development" */}
+              <rect x="15" y="32" width="90" height="16" rx="8" ry="8" fill="url(#amplificationGradient)" opacity="0.8"/>
+              
+              {/* Top bar - "Execution" */}
+              <rect x="10" y="10" width="100" height="16" rx="8" ry="8" fill="url(#amplificationGradient)"/>
+            </svg>
+          </div>
+          
+          {/* Company Name */}
           <h1>Enders Consulting</h1>
         </div>
+        
         <nav className={styles.navigation}>
           <a href="#">Home</a>
           <a href="#">About Us</a>
@@ -236,6 +259,70 @@ export default function Home() {
       <footer className={styles.footer}>
         <p>&copy; 2025 endersconsulting.cloud. All Rights Reserved.</p>
       </footer>
+
+      {/* Logo Styles - Embedded CSS */}
+      <style jsx>{`
+        .logoIcon {
+          display: flex;
+          align-items: center;
+          padding: 6px;
+          border-radius: 8px;
+          background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+          box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
+          transition: all 0.3s ease;
+        }
+        
+        .logoIcon:hover {
+          box-shadow: 0 4px 16px rgba(59, 130, 246, 0.25);
+          transform: translateY(-1px);
+        }
+        
+        .logo {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          cursor: pointer;
+          transition: transform 0.2s ease;
+          animation: logoEntrance 0.6s ease-out;
+        }
+        
+        .logo:hover {
+          transform: scale(1.02);
+        }
+        
+        .logo h1 {
+          margin: 0;
+          font-size: 1.5rem;
+          font-weight: 700;
+          color: #1f2937;
+          background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
+        
+        @keyframes logoEntrance {
+          0% {
+            opacity: 0;
+            transform: translateX(-20px);
+          }
+          100% {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+        
+        /* Mobile responsive logo */
+        @media (max-width: 768px) {
+          .logo h1 {
+            font-size: 1.25rem;
+          }
+          
+          .logoIcon {
+            padding: 4px;
+          }
+        }
+      `}</style>
     </div>
   );
 }
